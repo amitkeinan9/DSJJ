@@ -3,8 +3,11 @@
 import Vue from 'vue'
 import firebase from 'firebase'
 import App from './App'
+import vuex from 'vuex'
 import router from './router'
 import config from './firebaseConfig'
+import store from './store'
+
 Vue.config.productionTip = false
 
 firebase.initializeApp(config);
@@ -13,6 +16,9 @@ firebase.initializeApp(config);
 new Vue({
   el: '#app',
   router,
-  components: { App },
+  store,
+  components: {
+    App
+  },
   template: '<App/>'
 })

@@ -1,0 +1,59 @@
+<template>
+  <div dir="ltr">
+    <div class="margin control has-icons-left">
+      <input v-model="email" class="input" type="email" placeholder="Email">
+      <span class="icon is-small is-left">
+        <i class="fas fa-envelope"></i>
+      </span>
+    </div>
+
+    <div class="margin control has-icons-left">
+      <input v-model="password" class="input" type="password" placeholder="Password">
+      <span class="icon is-small is-left">
+        <i class="fas fa-lock"></i>
+      </span>
+    </div>
+    <div class="margin control">
+      <a @click="login" class="button is-link  is-outlined is-fullwidth" :class="{'is-loading': loading}">התחבר</a>
+    </div>
+  </div>
+  </div>
+</template>
+
+<script>
+  import firebase from 'firebase'
+
+  export default {
+    name: 'login',
+    data() {
+      return {
+        email: '',
+        password: '',
+        loading: false
+      }
+    },
+    methods: {
+      login() {
+        this.loading = true;
+        firebase.auth().signInWithEmailAndPassword(this.email, this.password)
+          .then(
+            (user) => {
+              this.loading = false
+              this.$emit('loggedIn', user);
+            },
+            (err) => {
+              this.loading = false
+              alert("fail")
+            })
+      }
+    }
+  }
+
+</script>
+
+<style lang="css">
+  .margin {
+    margin-top: 10px;
+  }
+
+</style>

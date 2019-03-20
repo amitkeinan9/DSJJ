@@ -1,22 +1,23 @@
 <template>
-  <div id="app">
-    <router-view/>
+  <div id="app" dir="rtl">
+    <navbar></navbar>
+    <div class="container">
+      <div class="columns is-centered is-mobile">
+        <div class="column is-8">
+          <router-view />
+      </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
-export default {
-  name: 'App'
-}
-</script>
+  import Navbar from '@/components/navbar'
+  export default {
+    name: 'App',
+    components: {
+      'navbar': Navbar
+    }
+  }
 
-<style>
-#app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
-</style>
+</script>
