@@ -1,6 +1,8 @@
 <template>
   <div>
-    Hello {{msg}}, This is the mailing list page
+      <p class="title is-1">רשימות תפוצה</p>
+      <br>
+      תוכן וכזה
   </div>
 </template>
 

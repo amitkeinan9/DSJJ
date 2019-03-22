@@ -1,6 +1,8 @@
 <template>
   <div>
-    Hello {{msg}}, This is the participants page
+      <p class="title is-1">חניכים</p>
+      <br>
+      תוכן וכזה
   </div>
 </template>
 
