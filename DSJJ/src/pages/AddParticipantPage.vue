@@ -80,9 +80,20 @@
         if (this.file && this.data.firstName && this.data.lastName && this.data.email && this.data.birthdate &&
           this.data.instructor && this.data.dojo && this.data.rank != 'דרגה') {
           firebase.firestore().collection("participants").add(this.data).then(participantRef => {
-            firebase.storage().ref().child("profile_pictures/" + participantRef.id).put(this.file).then(function (
+            const fileName = participantRef.id //  
+            const name = this.data.firstName + " " +  this.data.lastName
+            firebase.storage().ref().child("profile_pictures/" + fileName).put(this.file).then(function (
               snapshot) {
-              alert("Participant Created succefully")
+              firebase.functions().httpsCallable('createCard')({
+                id: participantRef.id,
+                name: name
+              }).then(() => {
+                alert("Participant Created succefully")
+              }).catch((e) => {
+                console.log(e)
+                alert("error")
+              })
+
             });
           })
         } else {
