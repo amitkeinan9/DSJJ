@@ -1,2 +1,2 @@
 # DSJJ
-An application to manage participants in denis survival.
+An application to manage participants, dojos ans instructors in denis survival.
