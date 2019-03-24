@@ -7,6 +7,21 @@ const fs = require('fs')
 const {bucketName} = require("./bucketConfig")
 const {Storage} = require('@google-cloud/storage');
 const storage = new Storage()
+const nodemailer = require('nodemailer')
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'dsjj.app@gmail.com',
+    pass: '5AhaUDXnxw'
+  }
+});
+
+var mailOptions = {
+  from: 'dsjj.app@gmail.com',
+  to: 'amitkeinan9@gmail.com',
+  subject: 'Card to print'
+};
+
 
 exports.createCard = functions.https.onCall((data, context) => {
   const destBucket = storage.bucket(bucketName) 
@@ -60,10 +75,16 @@ exports.createCard = functions.https.onCall((data, context) => {
               alignmentX: Jimp.HORIZONTAL_ALIGN_RIGHT
             }, 90);
             card.write(finalCardPath)
-            return destBucket.upload(finalCardPath, {
-              destination: path.join("cards", id + '_card.jpg')
-            })
-          }).catch((e) => console.log(e))
+            mailOptions.attachments = [{filename: id + ".png", path: finalCardPath}]
+            transporter.sendMail(mailOptions, function(error, info){
+              if (error) {
+                return "Fail"
+              } else {
+                return "Success"
+              }
+            });
+
+          }).catch(() => "Fail")
         })
       })
     });

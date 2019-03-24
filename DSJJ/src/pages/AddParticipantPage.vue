@@ -2,7 +2,7 @@
   <div>
     <p class="title is-1">הוספת חניך</p>
     <br>
-    <img :src="url" width="30%" alt="">
+    <img :src="imgSrc" width="20%" alt="">
     <input type="file" accept="image/*" capture="camera" @change="imageSelected">
     <div class="margin control">
       <input class="input" type="text" placeholder="שם פרטי" v-model="data.firstName">
@@ -35,7 +35,8 @@
       </select>
     </div>
     <div class="margin control">
-      <a class="button is-link  is-outlined is-fullwidth" @click="addParticipant">הוסף חניך</a>
+      <a class="button is-link  is-outlined is-fullwidth" :class="{'is-loading': loading}" @click="addParticipant">הוסף
+        חניך</a>
     </div>
   </div>
 </template>
@@ -46,20 +47,22 @@
     mapState
   } from 'vuex'
   import firebase from 'firebase'
+
   export default {
     name: 'AddParticipantPage',
     components: {},
     data() {
       return {
-        url: "/static/img/profileImage.6e63041.png",
+        loading: false,
         file: null,
+        imgSrc: this.getImgUrl(),
         data: {
           firstName: "",
           lastName: "",
           email: "",
           birthdate: "2000-10-14",
-          instructor: JSON.parse(sessionStorage.user).name,
-          dojo: JSON.parse(sessionStorage.user).dojo,
+          instructor: "", //JSON.parse(sessionStorage.user).name,
+          dojo: "", //JSON.parse(sessionStorage.user).dojo,
           rank: "דרגה",
         }
       }
@@ -74,40 +77,62 @@
       ...mapActions(['authorizePage', 'initRanks']),
       imageSelected(event) {
         this.file = (event.target.files[0])
-        this.url = URL.createObjectURL(this.file);
+        this.imgSrc = URL.createObjectURL(this.file);
+      },
+      getImgUrl() {
+        var assets = require.context('../assets/', false, /\.png$/)
+        return assets('./profileImage.png')
       },
       addParticipant() {
         if (this.file && this.data.firstName && this.data.lastName && this.data.email && this.data.birthdate &&
           this.data.instructor && this.data.dojo && this.data.rank != 'דרגה') {
+          this.loading = true;
           firebase.firestore().collection("participants").add(this.data).then(participantRef => {
-            const fileName = participantRef.id //  
-            const name = this.data.firstName + " " +  this.data.lastName
-            firebase.storage().ref().child("profile_pictures/" + fileName).put(this.file).then(function (
-              snapshot) {
+            const fileName = participantRef.id
+            const name = this.data.firstName + " " + this.data.lastName
+            firebase.storage().ref().child("profile_pictures/" + fileName).put(this.file).then((
+              snapshot) => {
+              console.log(snapshot)
+              snapshot.ref.getDownloadURL().then((link)=>{
+                participantRef.set({profilePicLink: link}, { merge: true })
+              })
+              
               firebase.functions().httpsCallable('createCard')({
                 id: participantRef.id,
                 name: name
               }).then(() => {
-                alert("Participant Created succefully")
+                this.loading = false;
+                Snackbar.show({
+                  text: 'החניך נוסף בהצלחה',
+                  showAction: false,
+                  backgroundColor: '#2fa04d'
+                });
               }).catch((e) => {
                 console.log(e)
-                alert("error")
+                Snackbar.show({
+                  text: 'התרחשה שגיאה, נסה שנית מאוחר יותר',
+                  showAction: false,
+                  backgroundColor: '#dc3035'
+                });
               })
-
             });
           })
         } else {
-          console.log("fill everything");
-
+          Snackbar.show({
+            text: 'אנא מלא את כל הפרטים',
+            showAction: false,
+            backgroundColor: '#dc3035'
+          });
         }
-
       }
     },
     created() {
-      this.authorizePage();
+      this.authorizePage().then(() => {
+        this.data.instructor = JSON.parse(sessionStorage.user).name
+        this.data.dojo = JSON.parse(sessionStorage.user).dojo
+      });
       this.initRanks();
     },
-
   }
 
 </script>
