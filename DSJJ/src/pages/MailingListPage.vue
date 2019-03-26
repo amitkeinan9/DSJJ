@@ -1,8 +1,14 @@
 <template>
   <div>
-      <p class="title is-1">רשימות תפוצה</p>
-      <br>
-      תוכן וכזה
+    <div class="container">
+      <div class="columns is-centered is-mobile">
+        <div class="column is-8">
+          <p class="title is-1">רשימות תפוצה</p>
+          <br>
+          תוכן וכזה
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -10,11 +16,9 @@
   import {
     mapActions
   } from 'vuex'
-
   export default {
     name: 'MailingListPage',
     components: {
-
     },
     data() {
       return {

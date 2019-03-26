@@ -1,16 +1,36 @@
 <template>
   <div>
-    <p class="title is-1">חניכים</p>
-    <br>
-    <loading-spinner :class="{'is-hidden': !loading}"></loading-spinner>
-    <participant @click="participantClick(participant)" v-for="participant in participants" :rank="participant.rank"
-      :name="participant.name" :image="participant.profilePicLink" :dojo="participant.dojo" :instructor="participant.instructor">
-    </participant>
-    <div v-show="!loading && participants.length == 0">
-      <p>
-        אין חניכים במערכת לחצו 
-        <a href="/#/addparticipant"> כאן כדי להוסיף חניכים</a>
-      </p>
+    <div class="container">
+      <div class="columns is-centered is-mobile">
+        <div class="column is-8">
+          <p class="title is-1">חניכים</p>
+          <br>
+          <loading-spinner v-show="loading"></loading-spinner>
+
+          <div v-if="participants && participants.length == 0">
+            <p>
+              אין חניכים במערכת לחצו
+              <a href="/#/addparticipant"> כאן כדי להוסיף חניכים</a>
+            </p>
+          </div>
+          <div v-else>
+              <div class="field">
+                  <p class="control has-icons-left has-icons-right">
+                    <input class="input" type="email" placeholder="חפש" v-model="search">
+                    <span class="icon is-small is-left">
+                      <i class="fas fa-search"></i>
+                    </span>
+                  </p>
+                </div>
+            <br>
+            <participant @click="participantClick(participant)" v-for="participant in filteredParticipants"
+              :rank="participant.rank" :name="participant.name" :image="participant.profilePicLink"
+              :dojo="participant.dojo" :instructor="participant.instructor">
+            </participant>
+
+          </div>
+        </div>
+      </div>
     </div>
 
   </div>
@@ -35,14 +55,20 @@
     data() {
       return {
         db: null,
-        participants: [],
-        loading: true
+        participants: null,
+        loading: true,
+        search: ""
+      }
+    },
+    computed: {
+      filteredParticipants() {
+        return this.participants.filter(p => p.name.includes(this.search) || p.dojo.includes(this.search) || p.instructor.includes(this.search) || p.rank.includes(this.search))
       }
     },
     methods: {
       ...mapActions(['authorizePage']),
       participantClick(participant) {
-        router.push('/participants/' + participant.id)
+        router.push({name: 'ParticipantPage', params: {participant: participant, id: participant.id}})
       }
     },
     created() {

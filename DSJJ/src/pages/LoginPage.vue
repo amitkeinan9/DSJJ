@@ -1,6 +1,13 @@
 <template>
   <div>
-    <login @loggedIn="loggedIn"></login>
+    <div class="container">
+      <div class="columns is-centered is-mobile">
+        <div class="column is-8">
+          <login @loggedIn="loggedIn"></login>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -34,7 +41,7 @@
             sessionStorage.setItem('user', JSON.stringify(userObj))
           })
         })
-        
+
       }
     },
     mounted() {

@@ -7,7 +7,7 @@
       <div class="card-content">
         <article class="media">
           <figure class="media-right">
-            <p class="image is-64x64">
+            <p class="image is-64x64 image-cropper">
               <img :src="image">
             </p>
           </figure>
@@ -43,3 +43,18 @@
   }
 
 </script>
+
+<style scoped>
+        .image-cropper {
+        width: 64px;
+        height: 64px;
+        position: relative;
+        overflow: hidden;
+        border-radius: 50%;
+    }
+    
+    img {
+        display: inline;
+        margin: 0 auto;
+    }
+    </style>

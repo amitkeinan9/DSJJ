@@ -41,7 +41,8 @@ export default new Router({
     {
       path: '/participants/:id',
       name: 'ParticipantPage',
-      component: ParticipantPage
+      component: ParticipantPage,
+      props: true
     }
   ],
   linkActiveClass: "is-active",

@@ -1,13 +1,8 @@
 <template>
   <div id="app" dir="rtl">
     <navbar></navbar>
-    <div class="container">
-      <div class="columns is-centered is-mobile">
-        <div class="column is-8">
-          <router-view />
-      </div>
-      </div>
-    </div>
+    <router-view />
+    
   </div>
 </template>
 

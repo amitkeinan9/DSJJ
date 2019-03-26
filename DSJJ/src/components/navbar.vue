@@ -1,5 +1,5 @@
 <template>
-        <div class="tabs is-centered is-fixed-bottom" >
+        <div class="tabs is-centered nav " >
                 <ul>
                     <router-link tag="li" to="/addparticipant">
                         <a>
@@ -46,4 +46,8 @@
     }
 </script>
            
-           
+           <style>
+           .nav {
+               margin: 0;
+           }
+           </style>

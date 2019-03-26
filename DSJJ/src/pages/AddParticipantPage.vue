@@ -1,42 +1,51 @@
 <template>
   <div>
-    <p class="title is-1">הוספת חניך</p>
-    <br>
-    <img :src="imgSrc" width="20%" alt="">
-    <input type="file" accept="image/*" capture="camera" @change="imageSelected">
-    <div class="margin control">
-      <input class="input" type="text" placeholder="שם פרטי" v-model="data.firstName">
-    </div>
-    <div class="margin control">
-      <input class="input" type="text" placeholder="שם משפחה" v-model="data.lastName">
-    </div>
-    <div class="margin control">
-      <input dir="rtl" class="input" type="date" v-model="data.birthdate">
-    </div>
+    <div class="container">
+      <div class="columns is-centered is-mobile">
+        <div class="column is-8">
 
-    <div class="margin control">
-      <input class="input" type="email" placeholder="מייל" v-model="data.email">
-    </div>
 
-    <div class="margin select is-fullwidth">
-      <select disabled>
-        <option value="" selected>{{data.dojo}}</option>
-      </select>
-    </div>
-    <div class="margin select is-fullwidth">
-      <select disabled>
-        <option value="" selected>{{data.instructor}}</option>
-      </select>
-    </div>
-    <div class="margin select is-fullwidth">
-      <select v-model="data.rank">
-        <option disabled selected>דרגה</option>
-        <option v-for="rank in ranks">{{rank.name}}</option>
-      </select>
-    </div>
-    <div class="margin control">
-      <a class="button is-link  is-outlined is-fullwidth" :class="{'is-loading': loading}" @click="addParticipant">הוסף
-        חניך</a>
+          <p class="title is-1">הוספת חניך</p>
+          <br>
+          <img width="20%" :src="imgSrc" alt="">
+          <input type="file" accept="image/*" capture="camera" @change="imageSelected">
+          <div class="margin control">
+            <input class="input" type="text" placeholder="שם פרטי" v-model="data.firstName">
+          </div>
+          <div class="margin control">
+            <input class="input" type="text" placeholder="שם משפחה" v-model="data.lastName">
+          </div>
+          <div class="margin control">
+            <input dir="rtl" class="input" type="date" v-model="data.birthdate">
+          </div>
+
+          <div class="margin control">
+            <input class="input" type="email" placeholder="מייל" v-model="data.email">
+          </div>
+
+          <div class="margin select is-fullwidth">
+            <select disabled>
+              <option value="" selected>{{data.dojo}}</option>
+            </select>
+          </div>
+          <div class="margin select is-fullwidth">
+            <select disabled>
+              <option value="" selected>{{data.instructor}}</option>
+            </select>
+          </div>
+          <div class="margin select is-fullwidth">
+            <select v-model="data.rank">
+              <option disabled selected>דרגה</option>
+              <option v-for="rank in ranks">{{rank.name}}</option>
+            </select>
+          </div>
+          <div class="margin control">
+            <a class="button is-link  is-outlined is-fullwidth" :class="{'is-loading': loading}"
+              @click="addParticipant">הוסף
+              חניך</a>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -93,10 +102,14 @@
             firebase.storage().ref().child("profile_pictures/" + fileName).put(this.file).then((
               snapshot) => {
               console.log(snapshot)
-              snapshot.ref.getDownloadURL().then((link)=>{
-                participantRef.set({profilePicLink: link}, { merge: true })
+              snapshot.ref.getDownloadURL().then((link) => {
+                participantRef.set({
+                  profilePicLink: link
+                }, {
+                  merge: true
+                })
               })
-              
+
               firebase.functions().httpsCallable('createCard')({
                 id: participantRef.id,
                 name: name

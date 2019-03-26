@@ -1,16 +1,23 @@
 <template>
   <div id="settingsPage">
-    <p class="title is-1">מועדונים</p>
-    <br>
-    <loading-spinner :class="{'is-hidden': loading}"></loading-spinner>
-    <dojo v-for="dojo in dojos" :dojo="dojo" @addInstructor="addInstructor"></dojo>
-    <div class="control">
-      <a @click="dojoModal=true" class="button is-link is-outlined is-fullwidth" :class="{'is-hidden': !loading}">הוסף
-        מועדון</a>
-    </div>
-    <add-modal @approve="addDojo" @close="dojoModal = false" title="מועדון" :fields='[{name: "name", displayName: "שם מועדון"}]'
-      :class="{'is-active': dojoModal}"></add-modal>
+    <div class="container">
+      <div class="columns is-centered is-mobile">
+        <div class="column is-8">
+          <p class="title is-1">מועדונים</p>
+          <br>
+          <loading-spinner :class="{'is-hidden': loading}"></loading-spinner>
+          <dojo v-for="dojo in dojos" :dojo="dojo" @addInstructor="addInstructor"></dojo>
+          <div class="control">
+            <a @click="dojoModal=true" class="button is-link is-outlined is-fullwidth"
+              :class="{'is-hidden': !loading}">הוסף
+              מועדון</a>
+          </div>
+          <add-modal @approve="addDojo" @close="dojoModal = false" title="מועדון"
+            :fields='[{name: "name", displayName: "שם מועדון"}]' :class="{'is-active': dojoModal}"></add-modal>
 
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
