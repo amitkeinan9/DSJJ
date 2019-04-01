@@ -2,7 +2,6 @@
   <div id="settingsPage">
     <add-modal @approve="addDojo" @close="dojoModal = false" title="מועדון"
       :fields='[{name: "name", displayName: "שם מועדון"}]' :class="{'is-active': dojoModal}"></add-modal>
-
     <div class="container">
       <div class="columns is-centered is-mobile">
         <div class="column is-8">
@@ -11,12 +10,11 @@
           <loading-spinner :class="{'is-hidden': loading}"></loading-spinner>
           <dojo v-for="dojo in dojos" :dojo="dojo" @addDojoToInstructor="addDojoToInstuctor"
             @addInstructor="addInstructor" :instructors="instructors"></dojo>
-          <div class="control">
+          <div class="control" v-if="isAdmin || isSuperInstructor">
             <a @click="dojoModal=true" class="button is-link is-outlined is-fullwidth"
               :class="{'is-hidden': !loading}">הוסף
               מועדון</a>
           </div>
-
         </div>
       </div>
     </div>
@@ -25,7 +23,8 @@
 
 <script>
   import {
-    mapActions
+    mapActions,
+    mapGetters
   } from 'vuex'
   import Dojo from '@/components/dojo'
   import Spinner from '@/components/loadingSpinner'
@@ -50,44 +49,44 @@
         instructors: []
       }
     },
+    computed: {
+      ...mapGetters(['isAdmin', 'isSuperInstructor', 'isInstructor'])
+    },
     methods: {
-      ...mapActions(['authorizePage']),
+      ...mapActions(['authorizePage', 'showError']),
       addDojo(data) {
         this.dojoModal = false;
         this.db.collection("dojos").add(data)
-          .catch(function (error) {
-            Snackbar.show({
-              text: 'התרחשה שגיאה, נסה שנית מאוחר יותר',
-              showAction: false,
-              backgroundColor: '#dc3035'
-            });
+          .catch((error) => {
+            if (error.code == 'permission-denied') {
+              this.showError('אין לך הרשאה לפעולה זו')
+            } else {
+              this.showError();
+            }
           });
       },
-      generatePassword() {
-        return Math.random().toString(36).slice(-8);
-      },
+
       addDojoToInstuctor(data) {
         let dojo = this.db.doc(data.dojo);
         let update = {}
         update.dojos = firebase.firestore.FieldValue.arrayUnion(dojo)
 
-        // this.db.collection('instructors').where('email', '==', data.email)
         this.db.collection('instructors').where('email', '==', data.email).get().then(res => {
           console.log(res)
-          res.docs[0].ref().update(update).then(() => {
+          res.docs[0].ref.update(update).then(() => {
             Snackbar.show({
               text: 'המאמן נוסף בהצלחה',
               showAction: false,
               backgroundColor: '#2fa04d'
             })
-          }).catch(() => {
+          }).catch((error) => {
             this.type = ""
             this.editing = false
-            Snackbar.show({
-              text: 'התרחשה שגיאה, נסה שנית מאוחר יותר',
-              showAction: false,
-              backgroundColor: '#dc3035'
-            });
+            if (error.code == 'permission-denied') {
+              this.showError('אין לך הרשאה לפעולה זו')
+            } else {
+              this.showError();
+            }
           });
 
         })
@@ -98,63 +97,31 @@
           return this.db.doc(dojo)
         });
 
-        firebase.auth().createUserWithEmailAndPassword(doc.email, this.generatePassword())
-          .then((userRef) => {
-            userRef.user.updateProfile({
-              displayName: doc.firstName + " " + doc.lastName,
-            }).then(function () {
-              firebase.auth().sendPasswordResetEmail(doc.email).then(function () {
-                firebase.firestore().collection("instructors").add(data)
-                  .then((docRef) => {
-                    Snackbar.show({
-                      text: 'המשתמש נוסף בהצלחה',
-                      showAction: false,
-                      backgroundColor: '#2fa04d'
-                    });
-                  })
-                  .catch(function (error) {
-                    Snackbar.show({
-                      text: 'התרחשה שגיאה, נסה שנית מאוחר יותר',
-                      showAction: false,
-                      backgroundColor: '#dc3035'
-                    });
-                    // TODO: Make a good notification
+        firebase.firestore().collection("instructors").where('email', '==', doc.email).get().then((snapshot) => {
+          if (snapshot.empty) {
+            firebase.firestore().collection("instructors").add(data)
+              .then((docRef) => {
+                firebase.functions().httpsCallable('createUser')({
+                  fullName: data.firstName + " " + data.lastName,
+                  email: doc.email,
+                }).then(() => {
+                  Snackbar.show({
+                    text: 'המאמן נוסף בהצלחה',
+                    showAction: false,
+                    backgroundColor: '#2fa04d'
                   });
-              }).catch(function (error) {
-                Snackbar.show({
-                  text: 'התרחשה שגיאה, נסה שנית מאוחר יותר',
-                  showAction: false,
-                  backgroundColor: '#dc3035'
-                });
-              });
-            }).catch(function (error) {
-              Snackbar.show({
-                text: 'התרחשה שגיאה, נסה שנית מאוחר יותר',
-                showAction: false,
-                backgroundColor: '#dc3035'
-              });
-            });
-          })
-          .catch(function (error) {
-            if (error.code == "auth/invalid-email") {
-              Snackbar.show({
-                text: 'המייל שהוכנס לא תקין',
-                showAction: false,
-                backgroundColor: '#dc3035'
-              });
-            } else {
-              Snackbar.show({
-                text: 'התרחשה שגיאה, נסה שנית מאוחר יותר',
-                showAction: false,
-                backgroundColor: '#dc3035'
-              });
-            }
-
-          });
-
-
-
-      }
+                })
+              }).catch((error) => {
+                  if (error.code == 'permission-denied') {
+                    this.showError('אין לך הרשאה לפעולה זו')
+                  } else {
+                    this.showError();
+                  }
+                })
+          } else
+            this.showError('המייל שהוכנס תפוס ');
+        })
+      },
     },
     created() {
       this.authorizePage();

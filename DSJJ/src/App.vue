@@ -8,6 +8,8 @@
 
 <script>
   import Navbar from '@/components/navbar'
+  import firebase from 'firebase'
+  import {mapActions} from 'vuex'
   export default {
     name: 'App',
     components: {
@@ -20,6 +22,20 @@
         
         return ['LoginPage'].indexOf(this.$route.name) == -1
       }
+    },
+    methods: {
+      ...mapActions(['setRole'])
+    },
+    created() {
+      firebase.auth().onAuthStateChanged((user) => {
+        console.log(user)
+        if (!user){
+          router.push("/")
+        } else {
+          user.getIdTokenResult().then(a => { this.setRole(a.claims.role)})
+          return true
+        }
+      });
     }
   }
 

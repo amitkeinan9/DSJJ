@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="is-pulled-left control">
+    <div class="is-pulled-left control" v-if="isAdmin || isSuperInstructor">
       <a class="button is-link is-outlined " @click="instructorModal = true">הוסף מאמן חדש</a>
       <a class="button is-link is-outlined " @click="selectModal = true">הוסף מאמן קיים</a>
 
@@ -20,6 +20,7 @@
 
 <script>
   import AddModal from '@/components/addModal'
+  import {mapGetters} from 'vuex'
   import selectModal from '@/components/selectModal'
 
   export default {
@@ -47,6 +48,9 @@
           }
         ]
       }
+    },
+    computed: {
+      ...mapGetters(['isAdmin', 'isSuperInstructor'])
     },
     methods: {
       addInstructor(data) {
