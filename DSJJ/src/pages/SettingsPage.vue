@@ -1,19 +1,21 @@
 <template>
   <div id="settingsPage">
+    <add-modal @approve="addDojo" @close="dojoModal = false" title="מועדון"
+      :fields='[{name: "name", displayName: "שם מועדון"}]' :class="{'is-active': dojoModal}"></add-modal>
+
     <div class="container">
       <div class="columns is-centered is-mobile">
         <div class="column is-8">
           <p class="title is-1">מועדונים</p>
           <br>
           <loading-spinner :class="{'is-hidden': loading}"></loading-spinner>
-          <dojo v-for="dojo in dojos" :dojo="dojo" @addInstructor="addInstructor"></dojo>
+          <dojo v-for="dojo in dojos" :dojo="dojo" @addDojoToInstructor="addDojoToInstuctor"
+            @addInstructor="addInstructor" :instructors="instructors"></dojo>
           <div class="control">
             <a @click="dojoModal=true" class="button is-link is-outlined is-fullwidth"
               :class="{'is-hidden': !loading}">הוסף
               מועדון</a>
           </div>
-          <add-modal @approve="addDojo" @close="dojoModal = false" title="מועדון"
-            :fields='[{name: "name", displayName: "שם מועדון"}]' :class="{'is-active': dojoModal}"></add-modal>
 
         </div>
       </div>
@@ -44,7 +46,8 @@
         db: null,
         dojos: [],
         loading: false,
-        dojoModal: false
+        dojoModal: false,
+        instructors: []
       }
     },
     methods: {
@@ -53,16 +56,47 @@
         this.dojoModal = false;
         this.db.collection("dojos").add(data)
           .catch(function (error) {
-            alert("An error occurred")
-            // TODO: Make a good notification
+            Snackbar.show({
+              text: 'התרחשה שגיאה, נסה שנית מאוחר יותר',
+              showAction: false,
+              backgroundColor: '#dc3035'
+            });
           });
       },
       generatePassword() {
         return Math.random().toString(36).slice(-8);
       },
+      addDojoToInstuctor(data) {
+        let dojo = this.db.doc(data.dojo);
+        let update = {}
+        update.dojos = firebase.firestore.FieldValue.arrayUnion(dojo)
+
+        // this.db.collection('instructors').where('email', '==', data.email)
+        this.db.collection('instructors').where('email', '==', data.email).get().then(res => {
+          console.log(res)
+          res.docs[0].ref().update(update).then(() => {
+            Snackbar.show({
+              text: 'המאמן נוסף בהצלחה',
+              showAction: false,
+              backgroundColor: '#2fa04d'
+            })
+          }).catch(() => {
+            this.type = ""
+            this.editing = false
+            Snackbar.show({
+              text: 'התרחשה שגיאה, נסה שנית מאוחר יותר',
+              showAction: false,
+              backgroundColor: '#dc3035'
+            });
+          });
+
+        })
+      },
       addInstructor(data) {
         let doc = data;
-        doc.dojo = this.db.doc(data.dojo);
+        doc.dojos = doc.dojos.map(dojo => {
+          return this.db.doc(dojo)
+        });
 
         firebase.auth().createUserWithEmailAndPassword(doc.email, this.generatePassword())
           .then((userRef) => {
@@ -72,24 +106,50 @@
               firebase.auth().sendPasswordResetEmail(doc.email).then(function () {
                 firebase.firestore().collection("instructors").add(data)
                   .then((docRef) => {
-                    alert("המשתמש נוצר")
+                    Snackbar.show({
+                      text: 'המשתמש נוסף בהצלחה',
+                      showAction: false,
+                      backgroundColor: '#2fa04d'
+                    });
                   })
                   .catch(function (error) {
-                    alert("An error occurred")
+                    Snackbar.show({
+                      text: 'התרחשה שגיאה, נסה שנית מאוחר יותר',
+                      showAction: false,
+                      backgroundColor: '#dc3035'
+                    });
                     // TODO: Make a good notification
                   });
               }).catch(function (error) {
-                console.log(error)
+                Snackbar.show({
+                  text: 'התרחשה שגיאה, נסה שנית מאוחר יותר',
+                  showAction: false,
+                  backgroundColor: '#dc3035'
+                });
               });
             }).catch(function (error) {
-              console.log(error)
+              Snackbar.show({
+                text: 'התרחשה שגיאה, נסה שנית מאוחר יותר',
+                showAction: false,
+                backgroundColor: '#dc3035'
+              });
             });
           })
           .catch(function (error) {
-            console.log(error)
-            var errorCode = error.code;
-            var errorMessage = error.message;
-            // ...
+            if (error.code == "auth/invalid-email") {
+              Snackbar.show({
+                text: 'המייל שהוכנס לא תקין',
+                showAction: false,
+                backgroundColor: '#dc3035'
+              });
+            } else {
+              Snackbar.show({
+                text: 'התרחשה שגיאה, נסה שנית מאוחר יותר',
+                showAction: false,
+                backgroundColor: '#dc3035'
+              });
+            }
+
           });
 
 
@@ -101,11 +161,13 @@
       this.db = firebase.firestore();
       this.db.collection("dojos").onSnapshot((dojoDocs) => {
         this.db.collection("instructors").onSnapshot((instDocs) => {
-          const instructors = _.groupBy(instDocs.docs.map(i => i.data()), 'dojo.id')
+          this.instructors = instDocs.docs.map(i => i.data())
           this.dojos = dojoDocs.docs.map(d => {
             let dojo = d.data();
             dojo.id = d.id;
-            dojo.instructors = instructors[d.id]
+            dojo.instructors = this.instructors.filter(inst => {
+              return inst.dojos.map(instDojo => instDojo.id).indexOf(dojo.id) != -1
+            })
             return dojo;
           });
           this.loading = true;

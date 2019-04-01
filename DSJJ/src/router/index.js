@@ -7,6 +7,8 @@ import SettingsPage from '@/pages/SettingsPage'
 import MailingListPage from '@/pages/MailingListPage'
 import ParticipantPage from '@/pages/ParticipantPage'
 
+import NoParticipantPage from '@/pages/NoParticipantPage'
+
 
 Vue.use(Router)
 
@@ -43,6 +45,12 @@ export default new Router({
       name: 'ParticipantPage',
       component: ParticipantPage,
       props: true
+    },
+
+    {
+      path: '/noparticipant',
+      name: 'NoParticipantPage',
+      component: NoParticipantPage
     }
   ],
   linkActiveClass: "is-active",

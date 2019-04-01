@@ -1,6 +1,6 @@
 <template>
   <div id="app" dir="rtl">
-    <navbar></navbar>
+    <navbar v-if="show"></navbar>
     <router-view />
     
   </div>
@@ -12,6 +12,14 @@
     name: 'App',
     components: {
       'navbar': Navbar
+    },
+    computed: {
+      show() {
+        console.log(this.$route.name)
+        console.log(['LoginPage'].indexOf(this.$route.name));
+        
+        return ['LoginPage'].indexOf(this.$route.name) == -1
+      }
     }
   }
 

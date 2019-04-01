@@ -7,8 +7,8 @@
 
           <p class="title is-1">הוספת חניך</p>
           <br>
-          <img width="20%" :src="imgSrc" alt="">
-          <input type="file" accept="image/*" capture="camera" @change="imageSelected">
+          <img id="img" width="20%" :src="imgSrc" alt="">
+          <input type="file" accept="image/*" @change="imageSelected">
           <div class="margin control">
             <input class="input" type="text" placeholder="שם פרטי" v-model="data.firstName">
           </div>
@@ -22,10 +22,16 @@
           <div class="margin control">
             <input class="input" type="email" placeholder="מייל" v-model="data.email">
           </div>
+          <div class="margin control">
+            <input class="input" type="text" placeholder="מספר טלפון של ההורים" v-model="data.parentPhoneNumber">
+          </div>
+          <div class="margin control">
+            <input class="input" type="text" placeholder="מספר טלפון" v-model="data.phoneNumber">
+          </div>
 
           <div class="margin select is-fullwidth">
-            <select disabled>
-              <option value="" selected>{{data.dojo}}</option>
+            <select>
+              <option v-for="dojo in data.dojos" value="">{{dojo}}</option>
             </select>
           </div>
           <div class="margin select is-fullwidth">
@@ -56,10 +62,12 @@
     mapState
   } from 'vuex'
   import firebase from 'firebase'
-
+  import steps from '@/components/steps'
   export default {
     name: 'AddParticipantPage',
-    components: {},
+    components: {
+      'steps': steps
+    },
     data() {
       return {
         loading: false,
@@ -73,6 +81,8 @@
           instructor: "", //JSON.parse(sessionStorage.user).name,
           dojo: "", //JSON.parse(sessionStorage.user).dojo,
           rank: "דרגה",
+          parentPhoneNumber: "",
+          phoneNumber: ""
         }
       }
     },
@@ -85,15 +95,29 @@
     methods: {
       ...mapActions(['authorizePage', 'initRanks']),
       imageSelected(event) {
-        this.file = (event.target.files[0])
-        this.imgSrc = URL.createObjectURL(this.file);
+        loadImage(
+          event.target.files[0],
+          (img) => {
+            this.imgSrc = img.toDataURL();
+            fetch(this.imgSrc)
+              .then(res => res.blob())
+              .then(blob => {
+                this.file = blob
+              });
+          }, {
+            maxWidth: 100,
+            orientation: true,
+            noRevoke: true,
+            canvas: true,
+          } // Options
+        );
       },
       getImgUrl() {
         var assets = require.context('../assets/', false, /\.png$/)
         return assets('./profileImage.png')
       },
       addParticipant() {
-        if (this.file && this.data.firstName && this.data.lastName && this.data.email && this.data.birthdate &&
+        if (this.file && this.data.phoneNumber && this.data.parentPhoneNumber && this.data.firstName && this.data.lastName && this.data.email && this.data.birthdate &&
           this.data.instructor && this.data.dojo && this.data.rank != 'דרגה') {
           this.loading = true;
           firebase.firestore().collection("participants").add(this.data).then(participantRef => {
@@ -101,18 +125,12 @@
             const name = this.data.firstName + " " + this.data.lastName
             firebase.storage().ref().child("profile_pictures/" + fileName).put(this.file).then((
               snapshot) => {
-              console.log(snapshot)
               snapshot.ref.getDownloadURL().then((link) => {
                 participantRef.set({
                   profilePicLink: link
                 }, {
                   merge: true
                 })
-              })
-
-              firebase.functions().httpsCallable('createCard')({
-                id: participantRef.id,
-                name: name
               }).then(() => {
                 this.loading = false;
                 Snackbar.show({
@@ -121,12 +139,16 @@
                   backgroundColor: '#2fa04d'
                 });
               }).catch((e) => {
-                console.log(e)
                 Snackbar.show({
                   text: 'התרחשה שגיאה, נסה שנית מאוחר יותר',
                   showAction: false,
                   backgroundColor: '#dc3035'
                 });
+              })
+
+              firebase.functions().httpsCallable('createCard')({
+                id: participantRef.id,
+                name: name
               })
             });
           })
@@ -142,7 +164,7 @@
     created() {
       this.authorizePage().then(() => {
         this.data.instructor = JSON.parse(sessionStorage.user).name
-        this.data.dojo = JSON.parse(sessionStorage.user).dojo
+        this.data.dojos = JSON.parse(sessionStorage.user).dojos
       });
       this.initRanks();
     },
@@ -150,9 +172,13 @@
 
 </script>
 
-<style lang="css">
+<style lang="css" scoped>
   .margin {
     margin-top: 10px;
+  }
+
+  #img {
+    image-orientation: from-image;
   }
 
 </style>

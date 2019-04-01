@@ -6,6 +6,8 @@
           <p class="title is-1">רשימות תפוצה</p>
           <br>
           תוכן וכזה
+
+          
         </div>
       </div>
     </div>

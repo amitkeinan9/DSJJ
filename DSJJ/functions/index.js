@@ -32,7 +32,7 @@ exports.createCard = functions.https.onCall((data, context) => {
 
   // create the QR code with the link
   const QRpath = path.join(os.tmpdir(), 'qr.png')
-  qrcode = qr.image('http://localhost:8080/#/participants/' + id, {
+  qrcode = qr.image('https://dsjj-5820a.firebaseapp.com/#/participants/' + id, {
     type: 'png',
     size: 1,
     margin: 1

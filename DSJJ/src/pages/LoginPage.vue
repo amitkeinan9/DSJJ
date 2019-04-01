@@ -17,6 +17,7 @@
   import {
     mapActions
   } from 'vuex'
+  import router from '@/router';
 
   export default {
     name: 'LoginPage',
@@ -32,14 +33,21 @@
       }) {
         const db = firebase.firestore()
         db.collection('instructors').where('email', '==', user.email).get().then((results) => {
+
           const inst = results.docs[0].data();
+
           let userObj = {
             name: inst.firstName + " " + inst.lastName
           }
-          db.doc('dojos/' + inst.dojo.id).get().then((d) => {
-            userObj.dojo = d.data().name
+
+          userObj.dojos = []
+          let proms = inst.dojos.map((dojo) => db.doc('dojos/' + dojo.id).get());
+          Promise.all(proms).then((dojos) => {
+            userObj.dojos = dojos.map(d => d.data().name);
             sessionStorage.setItem('user', JSON.stringify(userObj))
+            router.push('/participants')
           })
+
         })
 
       }

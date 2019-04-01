@@ -32,7 +32,8 @@
       }
     },
     methods: {
-        submit() {
+        submit(e) {
+          e.preventDefault();
             this.$emit('approve', this.data)
             return false;
         }

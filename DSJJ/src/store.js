@@ -14,10 +14,17 @@ export default new Vuex.Store({
     }
   },
   actions: {
-    authorizePage() {
-      firebase.auth().onAuthStateChanged(function (user) {
-        if (!user)
-          router.push("/")
+    authorizePage({}, cb) {
+      firebase.auth().onAuthStateChanged((user) => {
+        console.log(user)
+        if (!user){
+          if(cb)
+            cb()
+          else
+            router.push("/")
+        } else {
+          return true
+        }
       });
     },
     initRanks({commit, state }) {

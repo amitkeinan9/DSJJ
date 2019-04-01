@@ -43,7 +43,11 @@
             },
             (err) => {
               this.loading = false
-              alert("fail")
+              Snackbar.show({
+            text: 'שם המשתמש או הסיסמה לא נכונים',
+            showAction: false,
+            backgroundColor: '#dc3035'
+          });
             })
       }
     }

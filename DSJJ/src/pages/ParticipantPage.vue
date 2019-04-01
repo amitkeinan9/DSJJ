@@ -46,6 +46,32 @@
             </div>
           </nav>
           <nav class="level">
+              <div class="level-left">
+                <div class="level-item">
+                  <p class="subtitle is-5">
+                    <strong> מספר טלפון:</strong>
+                  </p>
+                </div>
+  
+              </div>
+              <div class="level-right">
+                <p class="level-item">{{participant.phoneNumber}}</p>
+              </div>
+            </nav>
+            <nav class="level">
+                <div class="level-left">
+                  <div class="level-item">
+                    <p class="subtitle is-5">
+                      <strong> מספר טלפון (הורים):</strong>
+                    </p>
+                  </div>
+    
+                </div>
+                <div class="level-right">
+                  <p class="level-item">{{participant.parentPhoneNumber}}</p>
+                </div>
+              </nav>
+          <nav class="level">
             <div class="level-left">
               <div class="level-item">
                 <p class="subtitle is-5">
@@ -56,38 +82,59 @@
             </div>
             <div class="level-right">
               <div class="level-item">
-                <div class="field has-addons" dir="ltr">
-                  <p class="control">
-                    <input class="input" type="text" v-model="email">
-                  </p>
-                  <p class="control">
-                    <button class="button" @click="updateEmail">
-                      <span class="icon">
-                        <i class="fas fa-save"></i>
-                      </span>
-                    </button>
-                  </p>
+                <div v-if="!viewer">
+                  <div class="field has-addons" dir="ltr">
+
+                    <p class="control">
+                      <input class="input" type="text" v-model="email">
+                    </p>
+                    <p class="control">
+                      <button class="button" @click="updateEmail">
+                        <span class="icon">
+                          <i class="fas fa-save"></i>
+                        </span>
+                      </button>
+                    </p>
+                  </div>
+                </div>
+                <div v-else>
+                  {{email}}
                 </div>
               </div>
             </div>
           </nav>
-          <hr>
-          <div class="columns is-mobile">
-            <div class="column">
-              <button class="is-outlined is-link button is-fullwidth" @click="editDojo">
-                <span v-if="type != 'dojo'">שנה מועדון</span>
-                <span v-else>סגור</span>
-              </button>
+          <div v-if="!viewer">
+            <hr>
+            <div class="columns is-mobile">
+              <div class="column">
+                <button class="is-outlined is-link button is-fullwidth" @click="editDojo">
+                  <span v-if="type != 'dojo'">שנה מועדון</span>
+                  <span v-else>סגור</span>
+                </button>
+              </div>
+              <div class="column">
+                <button class="is-outlined is-link button is-fullwidth" @click="editRank">
+                  <span v-if="type != 'rank'">שנה חגורה</span>
+                  <span v-else>סגור</span>
+                </button>
+              </div>
+              <div class="column">
+                <button class="is-outlined is-link button is-fullwidth" @click="editNote">
+                  <span v-if="type != 'note'">הוסף הערה</span>
+                  <span v-else>סגור</span>
+                </button>
+              </div>
             </div>
-            <div class="column">
-              <button class="is-outlined is-link button is-fullwidth" @click="editRank">
-                <span v-if="type != 'rank'">שנה חגורה</span>
-                <span v-else>סגור</span>
-              </button>
+            <edit-select v-if="type!='note' && editing" :options="options" @approve="saveEvent"></edit-select>
+            <div v-if="type=='note' && editing">
+
+              <textarea class="textarea" placeholder="כתוב הערה כאן" v-model="note"></textarea>
+              <br>
+              <button class="button is-outlined is-link is-fullwidth" @click="saveNote">הוסף</button>
             </div>
           </div>
-          <edit-select v-if="editing" :options="options" @approve="saveEvent"></edit-select>
-          <button class="is-outlined is-link button is-fullwidth">צפה בהיסטוריה</button>
+          <hr>
+          <timeline :events="participant.history"></timeline>
         </div>
       </div>
     </div>
@@ -104,20 +151,26 @@
   import firebase from 'firebase'
   import editSelect from '@/components/editSelect'
   import moment from 'moment'
+  import timeline from '@/components/timeline'
+  import router from '@/router'
+
   export default {
     name: 'ParticipantPage',
     components: {
       'edit-select': editSelect,
+      'timeline': timeline
     },
     props: ["participant", "id"],
     data() {
       return {
         email: "",
+        note: "",
         db: null,
         editing: false,
         options: [],
         type: "",
-        dojos: []
+        dojos: [],
+        viewer: false
       }
     },
     computed: {
@@ -125,6 +178,46 @@
     },
     methods: {
       ...mapActions(['authorizePage', 'initRanks']),
+      editNote() {
+        this.editing = !this.editing;
+        if (this.editing) {
+          this.type = "note"
+
+        } else {
+          this.type = ""
+        }
+      },
+      saveNote() {
+        
+        let event = {
+          startDate: moment().toDate().getTime(),
+          note: this.note, 
+          type: this.type,
+          uploadDate: moment().format('YYYY-MM-DD')
+        }
+
+        let update = {}
+        
+        update.history = firebase.firestore.FieldValue.arrayUnion(event)
+
+        this.db.collection('participants').doc(this.id).update(update).then(() => {
+          Snackbar.show({
+            text: 'המידע עודכן בהצלחה',
+            showAction: false,
+            backgroundColor: '#2fa04d'
+          })
+          this.type = ""
+          this.editing = false
+        }).catch(() => {
+          this.type = ""
+          this.editing = false
+          Snackbar.show({
+            text: 'התרחשה שגיאה, נסה שנית מאוחר יותר',
+            showAction: false,
+            backgroundColor: '#dc3035'
+          });
+        });
+      },
       updateEmail() {
         this.db.collection('participants').doc(this.id).update({
           email: this.email
@@ -134,7 +227,13 @@
             showAction: false,
             backgroundColor: '#2fa04d'
           });
-        })
+        }).catch(() => {
+          Snackbar.show({
+            text: 'התרחשה שגיאה, נסה שנית מאוחר יותר',
+            showAction: false,
+            backgroundColor: '#dc3035'
+          });
+        });
       },
       editRank() {
         this.editing = !this.editing;
@@ -142,7 +241,7 @@
           this.type = "rank"
           this.options = this.ranks.map(r => r.name)
         } else {
-            this.type = ""
+          this.type = ""
         }
       },
       editDojo() {
@@ -151,7 +250,7 @@
           this.type = "dojo"
           this.options = this.dojos
         } else {
-            this.type = ""
+          this.type = ""
         }
       },
       saveEvent(data) {
@@ -180,14 +279,25 @@
             text: 'המידע עודכן בהצלחה',
             showAction: false,
             backgroundColor: '#2fa04d'
-          });
+          })
           this.type = ""
           this.editing = false
-        })
+        }).catch(() => {
+          this.type = ""
+          this.editing = false
+          Snackbar.show({
+            text: 'התרחשה שגיאה, נסה שנית מאוחר יותר',
+            showAction: false,
+            backgroundColor: '#dc3035'
+          });
+        });
       }
     },
     created() {
-      this.authorizePage();
+      this.authorizePage(() => {
+        this.viewer = true
+      })
+      // console.log("====" + !this.authorizePage(true))
 
       this.db = firebase.firestore();
       if (this.participant)
@@ -195,7 +305,7 @@
 
       this.db.collection('participants').doc(this.id).onSnapshot(partRef => {
         if (!partRef.exists) {
-          console.log("404")
+          router.push("/noparticipant")
         } else {
           this.participant = partRef.data()
           this.email = this.participant.email
@@ -221,8 +331,8 @@
 
 <style scoped>
   .image-cropper {
-    width: 175px;
-    height: 175px;
+    width: 100px;
+    height: 100px;
     position: relative;
     overflow: hidden;
     border-radius: 50%;
