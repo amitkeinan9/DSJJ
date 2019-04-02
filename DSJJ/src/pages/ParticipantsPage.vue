@@ -77,8 +77,13 @@
       this.db.collection("participants").onSnapshot((participantsDocs) => {
         this.participants = participantsDocs.docs.map(p => {
           let participant = p.data()
+          this.db.collection("dojos").doc(participant.dojo).get().then((dojo) => participant.dojo = dojo.data());
+          this.db.collection("ranks").doc(participant.rank).get().then((rank) => participant.rank = rank.data());
+          this.db.collection("instructors").doc(participant.instructor).get().then((instructor) => participant.instructor = instructor.data());
+
           participant.name = participant.firstName + " " + participant.lastName
           participant.id = p.id
+          console.log(participant)
           return participant
         });
 

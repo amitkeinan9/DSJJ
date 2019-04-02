@@ -14,8 +14,8 @@
           <div class="media-content">
             <div class="content has-text-right">
               <p class="title is-4">{{name}}</p>
-              <p class="subtitle is-6">{{rank}}</p>
-              <p><strong>{{dojo}}</strong>, {{instructor}}</p>
+              <p class="subtitle is-6">{{rank.name}}</p>
+              <p><strong>{{dojo.name}}</strong>, {{instructor.firstName}} {{instructor.lastName}}</p>
               
             </div>
           </div>

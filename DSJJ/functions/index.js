@@ -36,50 +36,52 @@ const generatePassword = () => {
 }
 
 exports.createUser = functions.https.onCall((data, context) => {
-  admin.auth().createUser({
-      email: data.email,
-      password: generatePassword(),
-      displayName: data.fullName,
-    })
-    .then(function (userRecord) {
-      admin.auth().setCustomUserClaims(userRecord.uid, {
-        role: 'instructor'
-      }).then(() => {
-        admin.auth().generatePasswordResetLink(data.email).then(link => {
-          let mailOpts = {
-            from: 'dsjj.app@gmail.com',
-            to: userRecord.email,
-            subject: "ברוך הבא!",
-            html: `<p>שלום ` + data.fullName + `,</p>
+  if (["super-instructor", "admin"].indexOf(context.auth.token.role) != -1) {
+    admin.auth().createUser({
+        email: data.email,
+        password: generatePassword(),
+        displayName: data.fullName,
+      })
+      .then(function (userRecord) {
+        admin.auth().setCustomUserClaims(userRecord.uid, {
+          role: 'instructor'
+        }).then(() => {
+          admin.auth().generatePasswordResetLink(data.email).then(link => {
+            let mailOpts = {
+              from: 'dsjj.app@gmail.com',
+              to: userRecord.email,
+              subject: "ברוך הבא!",
+              html: `<p>שלום ` + data.fullName + `,</p>
           <p>נרשמת על ידי מאמן אחר בתור מאמן בשיטה.</p>
-          <p>כדי לאמת את כתובת האימייל, עליך להיכנס לקישור הזה.</p>
-          <p><a href='` + link + `'>קישור</a></p>
+          <p>כדי לאמת את כתובת האימייל, עליך להיכנס ל<a href='` + link + `'>קישור</a> הזה.</p>
           <p>תודה,</p>
           <p>צוות דניס הישרדות</p>`
-          }
-
-          console.log(mailOpts)
-
-          transporter.sendMail(mailOpts, (err, i) => {
-            if (err)
-              throw new functions.https.HttpsError(500)
-            else {
-              console.log("sent email!!!")
-              console.log(i);
-              
-              return 200
             }
-          })
 
+            console.log(mailOpts)
+
+            transporter.sendMail(mailOpts, (err, i) => {
+              if (err)
+                throw new functions.https.HttpsError(500)
+              else {
+                return "200"
+              }
+            })
+
+          })
         })
       })
-    })
-    .catch(function (error) {
-      throw new functions.https.HttpsError(500)
-    });
+      .catch(function (error) {
+        throw new functions.https.HttpsError(500)
+      });
+  } else {
+    throw new functions.https.HttpsError(401)
+  }
 })
 
 exports.createCard = functions.https.onCall((data, context) => {
+  if (!context.auth.uid)
+    throw new functions.https.HttpsError(401)
   const destBucket = storage.bucket(bucketName)
   console.log(destBucket.name)
   // get the name of the participant

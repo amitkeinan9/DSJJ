@@ -9,7 +9,7 @@
       <div class="margin select is-fullwidth">
 
         <select required v-model="data.selected">
-          <option v-for="option in options">{{option}}</option>
+          <option v-for="option in options" :value="option">{{option.name}}</option>
         </select>
       </div>
       <button type="submit" class="button is-outlined is-fullwidth is-link margin" >עדכן</button>

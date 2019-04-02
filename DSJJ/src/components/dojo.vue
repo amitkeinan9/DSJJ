@@ -56,13 +56,13 @@
       addInstructor(data) {
         console.log(this.dojo)
         this.instructorModal = false;
-        data['dojos'] = ['dojos/' + this.dojo.id]
+        data['dojos'] = [this.dojo.id]
         this.$emit('addInstructor', data)
       },
       addSelect(selected) {
-        let data = {email: selected}
+        let data = {id: selected}
         this.selectModal = false;
-        data.dojo = 'dojos/' + this.dojo.id
+        data.dojo = this.dojo.id
         this.$emit('addDojoToInstructor', data)
       }
     }

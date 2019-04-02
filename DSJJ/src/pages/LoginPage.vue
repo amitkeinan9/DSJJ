@@ -28,6 +28,7 @@
       return {}
     },
     methods: {
+      ...mapActions(['initStore']),
       loggedIn({
         user
       }) {
@@ -37,13 +38,18 @@
           const inst = results.docs[0].data();
 
           let userObj = {
-            name: inst.firstName + " " + inst.lastName
+            name: inst.firstName + " " + inst.lastName,
+            id: results.docs[0].id
           }
 
           userObj.dojos = []
-          let proms = inst.dojos.map((dojo) => db.doc('dojos/' + dojo.id).get());
+          let proms = inst.dojos.map((dojo) => db.doc('dojos/' + dojo).get());
           Promise.all(proms).then((dojos) => {
-            userObj.dojos = dojos.map(d => d.data().name);
+            userObj.dojos = dojos.map(d => {
+              let dojo = {name: d.data().name};
+              dojo.id = d.id;
+              return dojo;
+            });
             sessionStorage.setItem('user', JSON.stringify(userObj))
             router.push('/participants')
           })
@@ -53,6 +59,7 @@
       }
     },
     mounted() {
+      this.initStore();
       firebase.auth().signOut();
       sessionStorage.removeItem('user')
     }

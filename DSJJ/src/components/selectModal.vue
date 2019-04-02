@@ -5,7 +5,7 @@
       <div class="box is-8">
         <div class="margin select is-fullwidth">
           <select v-model="selected">
-            <option v-for="instructor in instructors" :value="instructor.email">{{instructor.firstName}}
+            <option v-for="instructor in instructors" :value="instructor.id">{{instructor.firstName}}
               {{instructor.lastName}}</option>
           </select>
         </div>
@@ -27,14 +27,14 @@
     props: ['instructors'],
     data() {
       return {
-        selected: this.instructors[0].email
+        selected: this.instructors[0].id
       }
     },
     methods: {
 
     },
     created() {
-      console.log(this.instructors)
+      
     }
   }
 

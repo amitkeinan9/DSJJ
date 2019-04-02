@@ -67,57 +67,55 @@
       },
 
       addDojoToInstuctor(data) {
-        let dojo = this.db.doc(data.dojo);
+        let dojo = data.dojo;
         let update = {}
         update.dojos = firebase.firestore.FieldValue.arrayUnion(dojo)
 
-        this.db.collection('instructors').where('email', '==', data.email).get().then(res => {
-          console.log(res)
-          res.docs[0].ref.update(update).then(() => {
-            Snackbar.show({
-              text: 'המאמן נוסף בהצלחה',
-              showAction: false,
-              backgroundColor: '#2fa04d'
-            })
-          }).catch((error) => {
-            this.type = ""
-            this.editing = false
-            if (error.code == 'permission-denied') {
-              this.showError('אין לך הרשאה לפעולה זו')
-            } else {
-              this.showError();
-            }
-          });
-
-        })
+        this.db.collection('instructors').doc(data.id).update(update).then(() => {
+          Snackbar.show({
+            text: 'המאמן נוסף בהצלחה',
+            showAction: false,
+            backgroundColor: '#2fa04d'
+          })
+        }).catch((error) => {
+          this.type = ""
+          this.editing = false
+          if (error.code == 'permission-denied') {
+            this.showError('אין לך הרשאה לפעולה זו')
+          } else {
+            this.showError();
+          }
+        });
       },
       addInstructor(data) {
         let doc = data;
-        doc.dojos = doc.dojos.map(dojo => {
-          return this.db.doc(dojo)
-        });
+        // doc.dojos = doc.dojos.map(dojo => {
+        //   return this.db.doc(dojo)
+        // });
 
         firebase.firestore().collection("instructors").where('email', '==', doc.email).get().then((snapshot) => {
           if (snapshot.empty) {
-            firebase.firestore().collection("instructors").add(data)
-              .then((docRef) => {
-                firebase.functions().httpsCallable('createUser')({
-                  fullName: data.firstName + " " + data.lastName,
-                  email: doc.email,
-                }).then(() => {
+            firebase.functions().httpsCallable('createUser')({
+              fullName: data.firstName + " " + data.lastName,
+              email: doc.email,
+            }).then((user) => {
+              firebase.firestore().collection("instructors").add(data)
+                .then((docRef) => {
                   Snackbar.show({
                     text: 'המאמן נוסף בהצלחה',
                     showAction: false,
                     backgroundColor: '#2fa04d'
                   });
-                })
-              }).catch((error) => {
+                }).catch((error) => {
                   if (error.code == 'permission-denied') {
                     this.showError('אין לך הרשאה לפעולה זו')
                   } else {
                     this.showError();
                   }
                 })
+
+            })
+
           } else
             this.showError('המייל שהוכנס תפוס ');
         })
@@ -128,12 +126,16 @@
       this.db = firebase.firestore();
       this.db.collection("dojos").onSnapshot((dojoDocs) => {
         this.db.collection("instructors").onSnapshot((instDocs) => {
-          this.instructors = instDocs.docs.map(i => i.data())
+          this.instructors = instDocs.docs.map(i => {
+            let inst = i.data();
+            inst.id = i.id;
+            return inst;
+          })
           this.dojos = dojoDocs.docs.map(d => {
             let dojo = d.data();
             dojo.id = d.id;
             dojo.instructors = this.instructors.filter(inst => {
-              return inst.dojos.map(instDojo => instDojo.id).indexOf(dojo.id) != -1
+              return inst.dojos.indexOf(dojo.id) != -1
             })
             return dojo;
           });

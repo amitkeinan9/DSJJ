@@ -30,19 +30,20 @@
           </div>
 
           <div class="margin select is-fullwidth">
-            <select>
-              <option v-for="dojo in data.dojos" value="">{{dojo}}</option>
+            <select v-model="data.dojo">
+              <option disabled selected>מועדון</option>
+              <option v-for="dojo in dojos" :value="dojo.id">{{dojo.name}}</option>
             </select>
           </div>
           <div class="margin select is-fullwidth">
-            <select disabled>
-              <option value="" selected>{{data.instructor}}</option>
+            <select disabled v-model="data.instructor">
+              <option :value="instructor.id" selected>{{instructor.name}}</option>
             </select>
           </div>
           <div class="margin select is-fullwidth">
             <select v-model="data.rank">
               <option disabled selected>דרגה</option>
-              <option v-for="rank in ranks">{{rank.name}}</option>
+              <option v-for="rank in ranks" :value="rank.id">{{rank.name}}</option>
             </select>
           </div>
           <div class="margin control">
@@ -73,13 +74,15 @@
         loading: false,
         file: null,
         imgSrc: this.getImgUrl(),
+        instructor: {},
+        dojos: [],
         data: {
           firstName: "",
           lastName: "",
           email: "",
           birthdate: "2000-10-14",
-          instructor: "", //JSON.parse(sessionStorage.user).name,
-          dojo: "", //JSON.parse(sessionStorage.user).dojo,
+          instructor: "",
+          dojo: "מועדון",
           rank: "דרגה",
           parentPhoneNumber: "",
           phoneNumber: ""
@@ -93,7 +96,7 @@
       }
     },
     methods: {
-      ...mapActions(['authorizePage', 'initRanks']),
+      ...mapActions(['authorizePage', 'showError']),
       imageSelected(event) {
         loadImage(
           event.target.files[0],
@@ -116,9 +119,23 @@
         var assets = require.context('../assets/', false, /\.png$/)
         return assets('./profileImage.png')
       },
+      initFields() {
+        this.data = {
+          firstName: "",
+          lastName: "",
+          email: "",
+          birthdate: "2000-10-14",
+          instructor: this.instructor.id,
+          dojo: "מועדון", //JSON.parse(sessionStorage.user).dojo,
+          rank: "דרגה",
+          parentPhoneNumber: "",
+          phoneNumber: ""
+        }
+      },
       addParticipant() {
-        if (this.file && this.data.phoneNumber && this.data.parentPhoneNumber && this.data.firstName && this.data.lastName && this.data.email && this.data.birthdate &&
-          this.data.instructor && this.data.dojo && this.data.rank != 'דרגה') {
+        if (this.file && this.data.phoneNumber && this.data.parentPhoneNumber && this.data.firstName && this.data
+          .lastName && this.data.email && this.data.birthdate &&
+          this.data.instructor && this.data.dojo != 'מועדון' && this.data.rank != 'דרגה') {
           this.loading = true;
           firebase.firestore().collection("participants").add(this.data).then(participantRef => {
             const fileName = participantRef.id
@@ -138,35 +155,35 @@
                   showAction: false,
                   backgroundColor: '#2fa04d'
                 });
+                this.initFields()
+                firebase.functions().httpsCallable('createCard')({
+                  id: participantRef.id,
+                  name: name
+                })
               }).catch((e) => {
-                Snackbar.show({
-                  text: 'התרחשה שגיאה, נסה שנית מאוחר יותר',
-                  showAction: false,
-                  backgroundColor: '#dc3035'
-                });
-              })
-
-              firebase.functions().httpsCallable('createCard')({
-                id: participantRef.id,
-                name: name
+                this.showError();
+                this.initFields()
               })
             });
+          }).catch((error) => {
+            console.log(error)
+            if (error.code == 'permission-denied') {
+              this.showError('אין לך הרשאה לפעולה זו')
+            } else {
+              this.showError();
+            }
           })
         } else {
-          Snackbar.show({
-            text: 'אנא מלא את כל הפרטים',
-            showAction: false,
-            backgroundColor: '#dc3035'
-          });
+          this.showError('אנא מלא את כל הפרטים');
         }
       }
     },
     created() {
       this.authorizePage().then(() => {
-        this.data.instructor = JSON.parse(sessionStorage.user).name
-        this.data.dojos = JSON.parse(sessionStorage.user).dojos
+        this.instructor = JSON.parse(sessionStorage.user)
+        this.data.instructor = this.instructor.id
+        this.dojos = this.instructor.dojos
       });
-      this.initRanks();
     },
   }
 

@@ -13,20 +13,20 @@
             <div class="level-item has-text-centered">
               <div>
                 <p class="heading">חגורה</p>
-                <p class="title">{{participant.rank}}</p>
+                <p class="title">{{participant.rank.name}}</p>
               </div>
             </div>
 
             <div class="level-item has-text-centered">
               <div>
                 <p class="heading">מאמן</p>
-                <p class="title">{{participant.instructor}}</p>
+                <p class="title">{{participant.instructor.firstName}} {{participant.instructor.lastName}}</p>
               </div>
             </div>
             <div class="level-item has-text-centered">
               <div>
                 <p class="heading">מועדון</p>
-                <p class="title">{{participant.dojo}}</p>
+                <p class="title">{{participant.dojo.name}}</p>
               </div>
             </div>
           </nav>
@@ -46,31 +46,31 @@
             </div>
           </nav>
           <nav class="level">
-              <div class="level-left">
-                <div class="level-item">
-                  <p class="subtitle is-5">
-                    <strong> מספר טלפון:</strong>
-                  </p>
-                </div>
-  
+            <div class="level-left">
+              <div class="level-item">
+                <p class="subtitle is-5">
+                  <strong> מספר טלפון:</strong>
+                </p>
               </div>
-              <div class="level-right">
-                <p class="level-item">{{participant.phoneNumber}}</p>
+
+            </div>
+            <div class="level-right">
+              <p class="level-item">{{participant.phoneNumber}}</p>
+            </div>
+          </nav>
+          <nav class="level">
+            <div class="level-left">
+              <div class="level-item">
+                <p class="subtitle is-5">
+                  <strong> מספר טלפון (הורים):</strong>
+                </p>
               </div>
-            </nav>
-            <nav class="level">
-                <div class="level-left">
-                  <div class="level-item">
-                    <p class="subtitle is-5">
-                      <strong> מספר טלפון (הורים):</strong>
-                    </p>
-                  </div>
-    
-                </div>
-                <div class="level-right">
-                  <p class="level-item">{{participant.parentPhoneNumber}}</p>
-                </div>
-              </nav>
+
+            </div>
+            <div class="level-right">
+              <p class="level-item">{{participant.parentPhoneNumber}}</p>
+            </div>
+          </nav>
           <nav class="level">
             <div class="level-left">
               <div class="level-item">
@@ -82,7 +82,7 @@
             </div>
             <div class="level-right">
               <div class="level-item">
-                <div v-if="!viewer">
+                <div v-if="canEdit">
                   <div class="field has-addons" dir="ltr">
 
                     <p class="control">
@@ -103,7 +103,7 @@
               </div>
             </div>
           </nav>
-          <div v-if="!viewer">
+          <div v-if="canEdit">
             <hr>
             <div class="columns is-mobile">
               <div class="column">
@@ -146,7 +146,8 @@
 <script>
   import {
     mapActions,
-    mapState
+    mapState,
+    mapGetters
   } from 'vuex'
   import firebase from 'firebase'
   import editSelect from '@/components/editSelect'
@@ -169,15 +170,18 @@
         editing: false,
         options: [],
         type: "",
-        dojos: [],
-        viewer: false
+        dojos: []
       }
     },
     computed: {
       ...mapState(['ranks']),
+      ...mapGetters(['isAdmin', 'isInstructor', 'isSuperInstructor', 'isViewer']),
+      canEdit() {
+        return this.isAdmin || this.isSuperInstructor || (this.isInstructor && this.participant.rank.rank < 7);
+      }
     },
     methods: {
-      ...mapActions(['authorizePage', 'initRanks']),
+      ...mapActions(['authorizePage', 'showError']),
       editNote() {
         this.editing = !this.editing;
         if (this.editing) {
@@ -188,18 +192,14 @@
         }
       },
       saveNote() {
-        
         let event = {
           startDate: moment().toDate().getTime(),
-          note: this.note, 
+          note: this.note,
           type: this.type,
           uploadDate: moment().format('YYYY-MM-DD')
         }
-
         let update = {}
-        
         update.history = firebase.firestore.FieldValue.arrayUnion(event)
-
         this.db.collection('participants').doc(this.id).update(update).then(() => {
           Snackbar.show({
             text: 'המידע עודכן בהצלחה',
@@ -211,11 +211,7 @@
         }).catch(() => {
           this.type = ""
           this.editing = false
-          Snackbar.show({
-            text: 'התרחשה שגיאה, נסה שנית מאוחר יותר',
-            showAction: false,
-            backgroundColor: '#dc3035'
-          });
+          this.showError()
         });
       },
       updateEmail() {
@@ -227,19 +223,19 @@
             showAction: false,
             backgroundColor: '#2fa04d'
           });
-        }).catch(() => {
-          Snackbar.show({
-            text: 'התרחשה שגיאה, נסה שנית מאוחר יותר',
-            showAction: false,
-            backgroundColor: '#dc3035'
-          });
-        });
+        }).catch((error) => {
+          if (error.code == 'permission-denied') {
+            this.showError('אין לך הרשאה לפעולה זו')
+          } else {
+            this.showError();
+          }
+        })
       },
       editRank() {
         this.editing = !this.editing;
         if (this.editing) {
           this.type = "rank"
-          this.options = this.ranks.map(r => r.name)
+          this.options = this.ranks
         } else {
           this.type = ""
         }
@@ -256,20 +252,21 @@
       saveEvent(data) {
         let event = {
           startDate: moment(data.date).toDate().getTime(),
-          to: data.selected,
+          to: data.selected.name,
           type: this.type,
           uploadDate: moment().format('YYYY-MM-DD')
         }
 
         let update = {}
         if (this.type == "rank") {
-          update.rank = data.selected
-          event.from = this.participant.rank
+          update.rank = data.selected.id
+          event.from = this.participant.rank.name
         } else {
-          const splitted = data.selected.split(" - ")
+          const splitted = data.selected.id.split(" ")
           update.dojo = splitted[0]
-          update.instructor = splitted.slice(1).join(" - ")
-          event.from = this.participant.dojo + " - " + this.participant.instructor
+          update.instructor = splitted[1]
+          event.from = this.participant.dojo.name + " - " + this.participant.instructor.firstName + " " + this
+            .participant.instructor.lastName
         }
 
         update.history = firebase.firestore.FieldValue.arrayUnion(event)
@@ -282,22 +279,19 @@
           })
           this.type = ""
           this.editing = false
-        }).catch(() => {
+        }).catch((error) => {
           this.type = ""
           this.editing = false
-          Snackbar.show({
-            text: 'התרחשה שגיאה, נסה שנית מאוחר יותר',
-            showAction: false,
-            backgroundColor: '#dc3035'
-          });
-        });
+          if (error.code == 'permission-denied') {
+            this.showError('אין לך הרשאה לפעולה זו')
+          } else {
+            this.showError();
+          }
+        })
       }
     },
     created() {
-      this.authorizePage(() => {
-        this.viewer = true
-      })
-      // console.log("====" + !this.authorizePage(true))
+      this.authorizePage(false);
 
       this.db = firebase.firestore();
       if (this.participant)
@@ -308,18 +302,38 @@
           router.push("/noparticipant")
         } else {
           this.participant = partRef.data()
+          this.db.collection("dojos").doc(this.participant.dojo).get().then((dojo) => this.participant.dojo = dojo
+            .data());
+          this.db.collection("ranks").doc(this.participant.rank).get().then((rank) => this.participant.rank = rank
+            .data());
+          this.db.collection("instructors").doc(this.participant.instructor).get().then((instructor) => this
+            .participant.instructor = instructor.data());
+
           this.email = this.participant.email
           this.participant.name = this.participant.firstName + " " + this.participant.lastName
         }
       });
-      this.initRanks();
+
       this.db.collection("dojos").onSnapshot((dojoDocs) => {
         this.db.collection("instructors").onSnapshot((instDocs) => {
-          const instructors = _.groupBy(instDocs.docs.map(i => i.data()), 'dojo.id')
+          const instructors = instDocs.docs.map(i => {
+            let inst = i.data();
+            inst.id = i.id;
+            return inst;
+          })
           this.dojos = _.flatten(dojoDocs.docs.map(d => {
-            let name = d.data().name;
-            console.log(instructors[d.id][0])
-            return instructors[d.id].map(i => name + " - " + i.firstName + " " + i.lastName)
+            let dojo = d.data();
+            dojo.id = d.id;
+            dojo.instructors = instructors.filter(inst => {
+              return inst.dojos.map(instDojo => instDojo.id).indexOf(dojo.id) != -1
+            })
+
+            return dojo.instructors.map(i => {
+              return {
+                name: dojo.name + " - " + i.firstName + " " + i.lastName,
+                id: dojo.id + " " + i.id
+              }
+            });;
           }));
           this.loading = true;
         });

@@ -2,14 +2,17 @@
   <div id="app" dir="rtl">
     <navbar v-if="show"></navbar>
     <router-view />
-    
+
   </div>
 </template>
 
 <script>
   import Navbar from '@/components/navbar'
   import firebase from 'firebase'
-  import {mapActions} from 'vuex'
+  import {
+    mapActions
+  } from 'vuex'
+  import router from './router'
   export default {
     name: 'App',
     components: {
@@ -19,20 +22,23 @@
       show() {
         console.log(this.$route.name)
         console.log(['LoginPage'].indexOf(this.$route.name));
-        
+
         return ['LoginPage'].indexOf(this.$route.name) == -1
       }
     },
     methods: {
-      ...mapActions(['setRole'])
+      ...mapActions(['setRole', 'initRanks', 'setAuthorized'])
     },
     created() {
       firebase.auth().onAuthStateChanged((user) => {
-        console.log(user)
-        if (!user){
-          router.push("/")
+        if (!user) {
+          this.setAuthorized(false)
         } else {
-          user.getIdTokenResult().then(a => { this.setRole(a.claims.role)})
+          this.setAuthorized(true)
+          user.getIdTokenResult().then(a => {
+            this.setRole(a.claims.role);
+            this.initRanks()
+          })
           return true
         }
       });
