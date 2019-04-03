@@ -105,7 +105,7 @@
           </nav>
           <div v-if="canEdit">
             <hr>
-            <div class="columns is-mobile">
+            <div class="columns is-mobile is-multiline is-centered">
               <div class="column">
                 <button class="is-outlined is-link button is-fullwidth" @click="editDojo">
                   <span v-if="type != 'dojo'">שנה מועדון</span>

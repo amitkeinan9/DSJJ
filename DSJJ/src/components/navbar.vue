@@ -1,5 +1,5 @@
 <template>
-  <div class="tabs is-centered nav ">
+  <div class="tabs is-centered nav">
     <ul>
       <router-link tag="li" to="/addparticipant">
         <a>
