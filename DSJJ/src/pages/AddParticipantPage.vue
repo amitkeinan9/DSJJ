@@ -36,8 +36,8 @@
             </select>
           </div>
           <div class="margin select is-fullwidth">
-            <select disabled v-model="data.instructor">
-              <option :value="instructor.id" selected>{{instructor.name}}</option>
+            <select :disabled='isInstructor' v-model="data.instructor">
+              <option v-for="currInstructor in instructors" :value="currInstructor.id">{{currInstructor.name}}</option>
             </select>
           </div>
           <div class="margin select is-fullwidth">
@@ -60,7 +60,8 @@
 <script>
   import {
     mapActions,
-    mapState
+    mapState,
+    mapGetters
   } from 'vuex'
   import firebase from 'firebase'
   import steps from '@/components/steps'
@@ -75,7 +76,7 @@
         file: null,
         imgSrc: this.getImgUrl(),
         instructor: {},
-        dojos: [],
+        instructors: [],
         data: {
           firstName: "",
           lastName: "",
@@ -91,8 +92,19 @@
     },
     computed: {
       ...mapState(['ranks']),
+      ...mapGetters(['isAdmin', 'isInstructor', 'isSuperInstructor']),
       user() {
         return JSON.parse(sessionStorage.user)
+      },
+      dojos() {
+        if (this.data.instructor == this.instructor.id)
+          return this.instructor.dojos
+        else if (this.instructors.length > 0)
+          return this.instructors.filter(i => {
+            return i.id == this.data.instructor
+          })[0].dojos
+        else
+          return []
       }
     },
     methods: {
@@ -167,6 +179,7 @@
             });
           }).catch((error) => {
             console.log(error)
+            this.loading = false;
             if (error.code == 'permission-denied') {
               this.showError('אין לך הרשאה לפעולה זו')
             } else {
@@ -180,9 +193,30 @@
     },
     created() {
       this.authorizePage().then(() => {
-        this.instructor = JSON.parse(sessionStorage.user)
+        this.instructor = JSON.parse(sessionStorage.user);
         this.data.instructor = this.instructor.id
-        this.dojos = this.instructor.dojos
+        this.instructors = [this.instructor]
+        
+        if (!this.isInstructor) {
+          firebase.firestore().collection('instructors').get().then(instRef => {
+            this.instructors = instRef.docs.map(i => {
+              let inst = {};
+              let data = i.data();
+              inst.name = data.firstName + " " + data.lastName;
+              inst.id = i.id;
+              Promise.all(data.dojos.map(id => firebase.firestore().collection('dojos').doc(id)
+                .get())).then((res) => {
+                inst.dojos = res.map(r => {
+                  return {
+                    name: r.data().name,
+                    id: r.id
+                  }
+                });
+              });
+              return inst
+            })
+          })
+        }
       });
     },
   }

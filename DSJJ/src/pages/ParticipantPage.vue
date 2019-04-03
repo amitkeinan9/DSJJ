@@ -135,6 +135,12 @@
           </div>
           <hr>
           <timeline :events="participant.history"></timeline>
+          <div v-if="isAdmin">
+            <hr>
+            <button class="is-outlined is-danger button is-fullwidth" @click="deleteParticipant">
+              מחק חניך
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -230,6 +236,23 @@
             this.showError();
           }
         })
+      },
+      deleteParticipant() {
+        this.db.collection("participants").doc(this.id).delete().then(function () {
+          router.push('/participants')
+          Snackbar.show({
+            text: 'החניך נמחק בהצלחה',
+            showAction: false,
+            backgroundColor: '#2fa04d'
+          });
+          
+        }).catch(function (error) {
+          if (error.code == 'permission-denied') {
+            this.showError('אין לך הרשאה לפעולה זו')
+          } else {
+            this.showError();
+          }
+        });
       },
       editRank() {
         this.editing = !this.editing;
