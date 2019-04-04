@@ -14,14 +14,20 @@
             </p>
           </div>
           <div v-else>
-              <div class="field">
-                  <p class="control has-icons-left has-icons-right">
-                    <input class="input" type="email" placeholder="חפש" v-model="search">
-                    <span class="icon is-small is-left">
-                      <i class="fas fa-search"></i>
-                    </span>
-                  </p>
-                </div>
+
+            <div class="field is-grouped " dir="ltr">
+              <scanner class="control"></scanner>
+
+              <p class="control has-icons-left has-icons-right is-expanded">
+                <input class="input " type="email" placeholder="חפש" v-model="search">
+                <span class="icon is-small is-left">
+                  <i class="fas fa-search"></i>
+                </span>
+              </p>
+
+
+
+            </div>
             <br>
             <participant @click="participantClick(participant)" v-for="participant in filteredParticipants"
               :rank="participant.rank" :name="participant.name" :image="participant.profilePicLink"
@@ -42,7 +48,7 @@
   } from 'vuex'
   import participant from '@/components/participant'
   import loadingSpinner from '@/components/loadingSpinner'
-
+  import QRScanner from '@/components/QRscanner'
   import router from '@/router'
   import firebase from 'firebase'
 
@@ -50,7 +56,8 @@
     name: 'ParticipantsPage',
     components: {
       'participant': participant,
-      'loading-spinner': loadingSpinner
+      'loading-spinner': loadingSpinner,
+      'scanner': QRScanner
     },
     data() {
       return {
@@ -62,13 +69,21 @@
     },
     computed: {
       filteredParticipants() {
-        return this.participants.filter(p => p.name.includes(this.search) || p.dojo.includes(this.search) || p.instructor.includes(this.search) || p.rank.includes(this.search))
+        return this.participants.filter(p => p.name.includes(this.search) || p.dojo.name.includes(this.search) ||
+          p.instructor.firstName.includes(this.search) || p.instructor.lastName.includes(this.search) || p.rank.name
+          .includes(this.search))
       }
     },
     methods: {
       ...mapActions(['authorizePage']),
       participantClick(participant) {
-        router.push({name: 'ParticipantPage', params: {participant: participant, id: participant.id}})
+        router.push({
+          name: 'ParticipantPage',
+          params: {
+            participant: participant,
+            id: participant.id
+          }
+        })
       }
     },
     created() {
@@ -77,9 +92,12 @@
       this.db.collection("participants").onSnapshot((participantsDocs) => {
         this.participants = participantsDocs.docs.map(p => {
           let participant = p.data()
-          this.db.collection("dojos").doc(participant.dojo).get().then((dojo) => participant.dojo = dojo.data());
-          this.db.collection("ranks").doc(participant.rank).get().then((rank) => participant.rank = rank.data());
-          this.db.collection("instructors").doc(participant.instructor).get().then((instructor) => participant.instructor = instructor.data());
+          this.db.collection("dojos").doc(participant.dojo).get().then((dojo) => participant.dojo = dojo
+            .data());
+          this.db.collection("ranks").doc(participant.rank).get().then((rank) => participant.rank = rank
+            .data());
+          this.db.collection("instructors").doc(participant.instructor).get().then((instructor) => participant
+            .instructor = instructor.data());
 
           participant.name = participant.firstName + " " + participant.lastName
           participant.id = p.id

@@ -7,7 +7,9 @@
           <br>
           תוכן וכזה
 
-          
+
+
+          <scanner></scanner>
         </div>
       </div>
     </div>
@@ -18,13 +20,16 @@
   import {
     mapActions
   } from 'vuex'
+
+  
+
   export default {
     name: 'MailingListPage',
     components: {
     },
     data() {
       return {
-        msg: "",
+        msg: ""
       }
     },
     methods: {

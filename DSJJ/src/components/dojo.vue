@@ -1,9 +1,15 @@
 <template>
   <div>
     <div class="is-pulled-left control" v-if="isAdmin || isSuperInstructor">
-      <a class="button is-link is-outlined " @click="instructorModal = true">הוסף מאמן חדש</a>
-      <a class="button is-link is-outlined " @click="selectModal = true">הוסף מאמן קיים</a>
-
+      <div class="columns is-multiline">
+        <div class="coulmn is-narrow">
+          <a class="button is-link is-outlined " @click="instructorModal = true">הוסף מאמן חדש</a>
+        </div>
+        <br>
+        <div class="coulmn is-narrow">
+          <a class="button is-link is-outlined " @click="selectModal = true">הוסף מאמן קיים</a>
+          </div>
+      </div>
     </div>
 
     <h1 class="is-4 title">{{ dojo.name }}</h1>
