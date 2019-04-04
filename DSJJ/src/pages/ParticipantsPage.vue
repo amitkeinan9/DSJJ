@@ -18,7 +18,7 @@
             <div class="field is-grouped " dir="ltr">
               <scanner class="control"></scanner>
 
-              <p class="control has-icons-left has-icons-right is-expanded">
+              <p class="control has-icons-left has-icons-right is-expanded" dir="rtl">
                 <input class="input " type="email" placeholder="חפש" v-model="search">
                 <span class="icon is-small is-left">
                   <i class="fas fa-search"></i>
