@@ -1,6 +1,6 @@
 <template>
   <div>
-    <a class="button" @click="show=!show"><span class="icon is-large"><i class="fas fa-qrcode"></i></span></a>
+    <a class="button" @click="show=!show"><img src="https://img.icons8.com/android/24/000000/qr-code.png"></a>
     <div v-if="show">
       <div class="modal is-active">
         <div class="modal-background "></div>

@@ -31,20 +31,8 @@
             </div>
           </nav>
           <hr>
-
-          <nav class="level">
-            <div class="level-left">
-              <div class="level-item">
-                <p class="subtitle is-5">
-                  <strong>תאריך לידה:</strong>
-                </p>
-              </div>
-
-            </div>
-            <div class="level-right">
-              <p class="level-item">{{participant.birthdate}}</p>
-            </div>
-          </nav>
+          <edit-value :canEdit="false" title="birthdate" displayName="תאריך לידה" :value="participant.birthdate" :id="id"></edit-value>
+          <br>
           <edit-value :canEdit="canEdit" title="phoneNumber" displayName="מספר טלפון" :value="participant.phoneNumber" :id="id"></edit-value>
           <br>
           <edit-value :canEdit="canEdit" title="parentPhoneNumber" displayName="מספר טלפון (הורים)" :value="participant.parentPhoneNumber" :id="id"></edit-value>
@@ -73,9 +61,9 @@
               </div>
             </div>
             <edit-select v-if="type!='note' && editing" :title="title" :options="options" @approve="saveEvent"></edit-select>
-            <div v-if="type=='note' && editing">
+            <div v-show="type=='note' && editing">
 
-              <textarea class="textarea" placeholder="כתוב הערה כאן" v-model="note"></textarea>
+              <textarea ref="note" class="textarea" placeholder="כתוב הערה כאן" v-model="note"></textarea>
               <br>
               <button class="button is-outlined is-link is-fullwidth" @click="saveNote">הוסף</button>
             </div>
@@ -143,9 +131,15 @@
         this.editing = !this.editing;
         if (this.editing) {
           this.type = "note"
-
+          console.log(this.$refs.note);
+          this.$refs.note.focus();
         } else {
           this.type = ""
+        }
+
+        if(this.editing && this.type == "note") {
+          console.log(this.$refs);
+          this.$refs.note.focus();
         }
       },
       saveNote() {
