@@ -14,7 +14,7 @@
       </span>
     </div>
     <div class="margin control">
-      <a @click="login" class="button is-link  is-outlined is-fullwidth" :class="{'is-loading': loading}">התחבר</a>
+      <button @click="login" class="button is-link  is-outlined is-fullwidth" :class="{'is-loading': loading}">התחבר</button>
     </div>
 
     <div class="column has-text-centered">

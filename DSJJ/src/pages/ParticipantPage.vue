@@ -45,64 +45,11 @@
               <p class="level-item">{{participant.birthdate}}</p>
             </div>
           </nav>
-          <nav class="level">
-            <div class="level-left">
-              <div class="level-item">
-                <p class="subtitle is-5">
-                  <strong> מספר טלפון:</strong>
-                </p>
-              </div>
-
-            </div>
-            <div class="level-right">
-              <p class="level-item">{{participant.phoneNumber}}</p>
-            </div>
-          </nav>
-          <nav class="level">
-            <div class="level-left">
-              <div class="level-item">
-                <p class="subtitle is-5">
-                  <strong> מספר טלפון (הורים):</strong>
-                </p>
-              </div>
-
-            </div>
-            <div class="level-right">
-              <p class="level-item">{{participant.parentPhoneNumber}}</p>
-            </div>
-          </nav>
-          <nav class="level">
-            <div class="level-left">
-              <div class="level-item">
-                <p class="subtitle is-5">
-                  <strong>מייל:</strong>
-                </p>
-              </div>
-
-            </div>
-            <div class="level-right">
-              <div class="level-item">
-                <div v-if="canEdit">
-                  <div class="field has-addons" dir="ltr">
-
-                    <p class="control">
-                      <input class="input" type="text" v-model="email">
-                    </p>
-                    <p class="control">
-                      <button class="button" @click="updateEmail">
-                        <span class="icon">
-                          <i class="fas fa-save"></i>
-                        </span>
-                      </button>
-                    </p>
-                  </div>
-                </div>
-                <div v-else>
-                  {{email}}
-                </div>
-              </div>
-            </div>
-          </nav>
+          <edit-value :canEdit="canEdit" title="phoneNumber" displayName="מספר טלפון" :value="participant.phoneNumber" :id="id"></edit-value>
+          <br>
+          <edit-value :canEdit="canEdit" title="parentPhoneNumber" displayName="מספר טלפון (הורים)" :value="participant.parentPhoneNumber" :id="id"></edit-value>
+          <br>
+          <edit-value :canEdit="canEdit" title="email" displayName="מייל" :value="email" :id="id"></edit-value>
           <div v-if="canEdit">
             <hr>
             <div class="columns is-mobile is-multiline is-centered">
@@ -160,12 +107,14 @@
   import moment from 'moment'
   import timeline from '@/components/timeline'
   import router from '@/router'
+  import editValue from '@/components/editValueComponent'
 
   export default {
     name: 'ParticipantPage',
     components: {
       'edit-select': editSelect,
-      'timeline': timeline
+      'timeline': timeline,
+      'edit-value': editValue
     },
     props: ["participantprop", "id"],
     data() {
