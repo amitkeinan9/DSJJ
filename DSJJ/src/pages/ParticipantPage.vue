@@ -125,7 +125,7 @@
                 </button>
               </div>
             </div>
-            <edit-select v-if="type!='note' && editing" :options="options" @approve="saveEvent"></edit-select>
+            <edit-select v-if="type!='note' && editing" :title="title" :options="options" @approve="saveEvent"></edit-select>
             <div v-if="type=='note' && editing">
 
               <textarea class="textarea" placeholder="כתוב הערה כאן" v-model="note"></textarea>
@@ -167,14 +167,16 @@
       'edit-select': editSelect,
       'timeline': timeline
     },
-    props: ["participant", "id"],
+    props: ["participantprop", "id"],
     data() {
       return {
+        participant: undefined,
         email: "",
         note: "",
         db: null,
         editing: false,
         options: [],
+        title: "",
         type: "",
         dojos: []
       }
@@ -257,6 +259,7 @@
       editRank() {
         this.editing = !this.editing;
         if (this.editing) {
+          this.title = "לדרגה החדשה"
           this.type = "rank"
           this.options = this.ranks
         } else {
@@ -266,6 +269,7 @@
       editDojo() {
         this.editing = !this.editing;
         if (this.editing) {
+          this.title = "למועדון החדש"
           this.type = "dojo"
           this.options = this.dojos
         } else {
@@ -316,6 +320,8 @@
     created() {
       this.authorizePage(false);
 
+      this.participant = this.participantprop
+
       this.db = firebase.firestore();
       if (this.participant)
         this.email = this.participant.email
@@ -348,7 +354,7 @@
             let dojo = d.data();
             dojo.id = d.id;
             dojo.instructors = instructors.filter(inst => {
-              return inst.dojos.map(instDojo => instDojo.id).indexOf(dojo.id) != -1
+              return inst.dojos.indexOf(dojo.id) != -1
             })
 
             return dojo.instructors.map(i => {

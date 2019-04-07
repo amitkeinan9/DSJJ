@@ -3,7 +3,7 @@
     <div class="container">
       <div class="columns is-centered is-mobile">
         <div class="column is-8">
-          <login @loggedIn="loggedIn"></login>
+          <login @loggedIn="loggedIn" @forgotEmail="reset"></login>
         </div>
       </div>
     </div>
@@ -28,7 +28,23 @@
       return {}
     },
     methods: {
-      ...mapActions(['initStore']),
+      ...mapActions(['initStore', 'showError']),
+      reset(email) {
+        firebase.auth().sendPasswordResetEmail(email).then(() => {
+          Snackbar.show({
+            text: 'מייל לאיפוס הסיסמה נשלח בהצלחה',
+            showAction: false,
+            backgroundColor: '#2fa04d'
+          });
+        }).catch((error) => {
+          if (error.code == "auth/invalid-email")
+            this.showError('המייל שהוכנס לא תקין')
+          else if (error.code == "auth/user-not-found")
+            this.showError('המייל שהוכנס לא קיים במערכת')
+          else
+            this.showError();
+        });
+      },
       loggedIn({
         user
       }) {
@@ -46,7 +62,9 @@
           let proms = inst.dojos.map((dojo) => db.doc('dojos/' + dojo).get());
           Promise.all(proms).then((dojos) => {
             userObj.dojos = dojos.map(d => {
-              let dojo = {name: d.data().name};
+              let dojo = {
+                name: d.data().name
+              };
               dojo.id = d.id;
               return dojo;
             });

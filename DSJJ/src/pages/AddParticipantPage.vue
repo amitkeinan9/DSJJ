@@ -9,6 +9,12 @@
           <br>
           <img id="img" width="20%" :src="imgSrc" alt="">
           <input type="file" accept="image/*" @change="imageSelected">
+          <br><br>
+          <article class="message is-warning" dir="rtl">
+            <div class="message-body">
+              שים לב! פרט למספר טלפון כל השדות הם חובה
+            </div>
+          </article>
           <div class="margin control">
             <input class="input" type="text" placeholder="שם פרטי" v-model="data.firstName">
           </div>
@@ -78,6 +84,7 @@
         instructor: {},
         instructors: [],
         data: {
+          history: [],
           firstName: "",
           lastName: "",
           email: "",
@@ -132,22 +139,29 @@
         return assets('./profileImage.png')
       },
       initFields() {
+        this.file = null
+        this.imgSrc = this.getImgUrl()
         this.data = {
+
+          history: [],
           firstName: "",
           lastName: "",
           email: "",
           birthdate: "2000-10-14",
           instructor: this.instructor.id,
-          dojo: "מועדון", //JSON.parse(sessionStorage.user).dojo,
+          dojo: "מועדון",
           rank: "דרגה",
           parentPhoneNumber: "",
           phoneNumber: ""
         }
       },
       addParticipant() {
-        if (this.file && this.data.phoneNumber && this.data.parentPhoneNumber && this.data.firstName && this.data
+        if (this.file && this.data.parentPhoneNumber && this.data.firstName && this.data
           .lastName && this.data.email && this.data.birthdate &&
           this.data.instructor && this.data.dojo != 'מועדון' && this.data.rank != 'דרגה') {
+          if (!this.phoneNumber) {
+            this.data.phoneNumber = "לא הוכנס"
+          }
           this.loading = true;
           firebase.firestore().collection("participants").add(this.data).then(participantRef => {
             const fileName = participantRef.id
@@ -196,7 +210,7 @@
         this.instructor = JSON.parse(sessionStorage.user);
         this.data.instructor = this.instructor.id
         this.instructors = [this.instructor]
-        
+
         if (!this.isInstructor) {
           firebase.firestore().collection('instructors').get().then(instRef => {
             this.instructors = instRef.docs.map(i => {

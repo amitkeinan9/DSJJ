@@ -1,5 +1,5 @@
 <template>
-  <div class="edit" dir="ltr">
+  <div class="edit" dir="ltr" v-if="events.length > 0">
     <div class="timeline is-centered">
       <header class="timeline-header">
         <span class="tag is-medium is-link">התחלה</span>

@@ -80,7 +80,7 @@
         router.push({
           name: 'ParticipantPage',
           params: {
-            participant: participant,
+            participantprop: participant,
             id: participant.id
           }
         })

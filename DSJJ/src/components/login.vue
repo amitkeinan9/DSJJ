@@ -16,7 +16,23 @@
     <div class="margin control">
       <a @click="login" class="button is-link  is-outlined is-fullwidth" :class="{'is-loading': loading}">התחבר</a>
     </div>
-  </div>
+
+    <div class="column has-text-centered">
+      <a class="" dir="rtl" @click="enterMail = true">
+        שכחתי את הסיסמה שלי...  (או שהקישור שלי פג תוקף זה גם תופס)
+      </a>
+    </div>
+    <div v-if="enterMail">
+      <div class="margin control has-icons-left">
+        <input v-model="forgotEmail" class="input" type="email" placeholder="Email">
+        <span class="icon is-small is-left">
+          <i class="fas fa-envelope"></i>
+        </span>
+      </div>
+      <div class="margin control">
+          <a @click="$emit('forgotEmail', forgotEmail)" class="button is-danger  is-outlined is-fullwidth">אפס סיסמה</a>
+        </div>
+    </div>
   </div>
 </template>
 
@@ -27,6 +43,8 @@
     name: 'login',
     data() {
       return {
+        forgotEmail: "",
+        enterMail: false,
         email: '',
         password: '',
         loading: false
@@ -44,10 +62,10 @@
             (err) => {
               this.loading = false
               Snackbar.show({
-            text: 'שם המשתמש או הסיסמה לא נכונים',
-            showAction: false,
-            backgroundColor: '#dc3035'
-          });
+                text: 'שם המשתמש או הסיסמה לא נכונים',
+                showAction: false,
+                backgroundColor: '#dc3035'
+              });
             })
       }
     }

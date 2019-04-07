@@ -2,7 +2,8 @@
   <div class="edit">
     <form @submit="submit">
       <div class="margin control">
-        <p class="has-text-right"><strong>תחילת תוקף</strong></p>
+        
+        <p class="has-text-right"><strong> תחילת תוקף {{title}}</strong></p>
         <input dir="rtl" class="input" type="date" v-model="data.date" :max="today">
       </div>
       <p class="has-text-right"><strong>ערך חדש</strong></p>
@@ -21,7 +22,7 @@
   import moment from 'moment'
   export default {
     name: 'editSelect',
-    props: ['options'],
+    props: ['options', 'title'],
     data() {
       return {
         today: moment().format('YYYY-MM-DD'),
