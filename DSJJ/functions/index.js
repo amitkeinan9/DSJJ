@@ -108,7 +108,7 @@ exports.createCard = functions.https.onCall((data, context) => {
     fs.mkdirSync(dir);
   }
 
-  return Promise.all([destBucket.file(path.join('assets', 'card.jpg')).download({
+  return Promise.all([destBucket.file(path.join('assets', 'card' + data.index + '.jpeg')).download({
     destination: cardBasePath
   }), destBucket.file(path.join('assets', 'font.fnt')).download({
     destination: fontFntPath
@@ -117,7 +117,6 @@ exports.createCard = functions.https.onCall((data, context) => {
   }), destBucket.file(path.join("profile_pictures", id)).download({
     destination: profilePicPath
   })]).then(() => {
-    console.log("hopa")
     Jimp.read(cardBasePath, (err, card) => {
       if (err) throw err;
       Jimp.read(profilePicPath, (err, profile) => {

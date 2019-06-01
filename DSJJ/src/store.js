@@ -38,6 +38,13 @@ export default new Vuex.Store({
     }, role) {
       commit('SET_ROLE', role)
     },
+    rankToCardIndex({}, rank) {
+      if(rank <= 5) 
+        return 1;
+      if(rank <= 11)
+        return 2;
+      return 3;
+    },
     initRanks({
       commit,
       state

@@ -3,8 +3,6 @@
     <div class="container">
       <div class="columns is-centered is-mobile">
         <div class="column is-8">
-
-
           <p class="title is-1">הוספת חניך</p>
           <br>
           <img id="img" width="20%" :src="imgSrc" alt="">
@@ -12,7 +10,7 @@
           <br><br>
           <article class="message is-warning" dir="rtl">
             <div class="message-body">
-              שים לב! פרט למספר טלפון כל השדות הם חובה
+              שים לב! במידה והחניך מתחת לגיל 18, מספר הטלפון של ההורים הוא חובה והשני הוא רשות. כאשר החניך מעל גיל 18 יש להכניס לפחות מספר טלפון אחד.
             </div>
           </article>
           <div class="margin control">
@@ -71,6 +69,7 @@
   } from 'vuex'
   import firebase from 'firebase'
   import steps from '@/components/steps'
+  import moment from 'moment'
   export default {
     name: 'AddParticipantPage',
     components: {
@@ -115,7 +114,13 @@
       }
     },
     methods: {
-      ...mapActions(['authorizePage', 'showError']),
+      ...mapActions(['authorizePage', 'showError', 'rankToCardIndex']),
+      above18(){
+        return moment().diff(moment(this.data.birthdate), 'years') >= 18; 
+      },
+      phoneNumberValid(data){
+        return (this.above18() && (data.phoneNumber || data.parentPhoneNumber)) || (!this.above18() && (data.parentPhoneNumber));
+      },
       imageSelected(event) {
         loadImage(
           event.target.files[0],
@@ -156,11 +161,14 @@
         }
       },
       addParticipant() {
-        if (this.file && this.data.parentPhoneNumber && this.data.firstName && this.data
+        if (this.file && this.phoneNumberValid(this.data) && this.data.firstName && this.data
           .lastName && this.data.email && this.data.birthdate &&
           this.data.instructor && this.data.dojo != 'מועדון' && this.data.rank != 'דרגה') {
-          if (!this.phoneNumber) {
+          if (!this.data.phoneNumber) {
             this.data.phoneNumber = "לא הוכנס"
+          }
+          if (!this.data.parentPhoneNumber) {
+            this.data.parentPhoneNumber = "לא הוכנס"
           }
           this.loading = true;
           firebase.firestore().collection("participants").add(this.data).then(participantRef => {
@@ -181,14 +189,20 @@
                   showAction: false,
                   backgroundColor: '#2fa04d'
                 });
+                
+                let rank = this.ranks.find((rank => rank.id == this.data.rank))
+                this.rankToCardIndex(rank.rank).then(index => {
+                  firebase.functions().httpsCallable('createCard')({
+                    id: participantRef.id,
+                    name: name,
+                    index: index
+                  })
+                }) 
                 this.initFields()
-                firebase.functions().httpsCallable('createCard')({
-                  id: participantRef.id,
-                  name: name
-                })
               }).catch((e) => {
+                console.log(e)
                 this.showError();
-                this.initFields()
+                // this.initFields()
               })
             });
           }).catch((error) => {

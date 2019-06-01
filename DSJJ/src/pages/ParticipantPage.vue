@@ -69,7 +69,14 @@
             </div>
           </div>
           <hr>
+          
           <timeline :events="participant.history"></timeline>
+          <div v-if="!isViewer">
+            <hr>
+            <button class="is-outlined is-warning button is-fullwidth" @click="createCard">
+              הנפק תעודה חדשה
+            </button>
+          </div>
           <div v-if="isAdmin">
             <hr>
             <button class="is-outlined is-danger button is-fullwidth" @click="deleteParticipant">
@@ -126,7 +133,7 @@
       }
     },
     methods: {
-      ...mapActions(['authorizePage', 'showError']),
+      ...mapActions(['authorizePage', 'showError', "rankToCardIndex"]),
       editNote() {
         this.editing = !this.editing;
         if (this.editing) {
@@ -218,6 +225,20 @@
         } else {
           this.type = ""
         }
+      },
+      createCard() {
+        this.rankToCardIndex(this.participant.rank.rank).then(index => {
+          firebase.functions().httpsCallable('createCard')({
+                  id: this.id,
+                  name: this.participant.name,
+                  index: index
+                })
+        }) 
+        Snackbar.show({
+            text: 'הכרטיס החדש נשלח להדפסה',
+            showAction: false,
+            backgroundColor: '#2fa04d'
+          });
       },
       saveEvent(data) {
         let event = {
