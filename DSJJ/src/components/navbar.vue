@@ -15,13 +15,13 @@
           </span>
         </a>
       </router-link>
-      <!-- <router-link tag="li" to="/mailinglist">
+      <router-link tag="li" to="/mailinglist">
         <a>
           <span class="icon">
             <i class="fas fa-mail-bulk"></i>
           </span>
         </a>
-      </router-link> -->
+      </router-link>
       <router-link tag="li" to="/dojos">
         <a>
           <span class="icon">

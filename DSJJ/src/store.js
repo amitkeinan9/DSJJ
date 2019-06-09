@@ -7,6 +7,7 @@ Vue.use(Vuex)
 export default new Vuex.Store({
   state: {
     ranks: [],
+    fullRanks: [],
     role: "viewer",
     auth: false
   },
@@ -19,6 +20,9 @@ export default new Vuex.Store({
     },
     SET_AUTH(state, auth) {
       state.auth = auth;
+    },
+    SET_FULL_RANKS(state, ranks) { 
+      state.fullRanks = ranks;
     }
   },
   actions: {
@@ -52,14 +56,14 @@ export default new Vuex.Store({
       if (state.ranks.length == 0) {
         let max = ["super-instructor", 'admin'].indexOf(state.role) == -1 ? 6 : 17
 
-        firebase.firestore().collection('ranks').where('rank', '<=', max).orderBy('rank').get().then((ranksRef) => {
+        firebase.firestore().collection('ranks').orderBy('rank').get().then((ranksRef) => {
           let ranks = ranksRef.docs.map(rank => {
             let r = rank.data();
             r.id = rank.id;
             return r;
           });
-          commit('SET_RANKS', ranks)
-          console.log(ranks)
+          commit('SET_FULL_RANKS', ranks);
+          commit('SET_RANKS', ranks.filter(r => r.rank < max));
         });
       }
     },

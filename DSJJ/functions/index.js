@@ -35,6 +35,62 @@ const generatePassword = () => {
   return Math.random().toString(36).slice(-8);
 }
 
+exports.sendEmail = functions.https.onCall((data, context) => {
+  let recpipientsRef = admin.firestore().collection("participants");
+  let recpipients = [];
+  const filters = data.filters;
+
+  console.log("FILTERS: ")
+  console.log(filters)
+
+  if (filters.dojo) {
+    console.log("Filtering by dojo")
+    recpipientsRef = recpipientsRef.where('dojo', '==', filters.dojo)
+  }
+  if (filters.instructor) {
+    console.log("Filtering by instructor")
+    recpipientsRef = recpipientsRef.where('instructor', '==', filters.instructor)
+  }
+  if (filters.rank) {
+    console.log("Filtering by rank")
+    recpipientsRef = recpipientsRef.where("rank", "==", filters.rank)
+  }
+  if (filters.minAge) {
+    console.log("Filtering by minAge")
+    recpipientsRef = recpipientsRef.where("birthdate", '<=', filters.minAge)
+  }
+
+  if (filters.maxAge) {
+    console.log("Filtering by maxAge")
+    recpipientsRef = recpipientsRef.where("birthdate", '>=', filters.maxAge)
+  }
+  recpipientsRef.get().then(recpipientsList => {
+    // console.log(recpipientsList.docs[0].data())
+    recpipients = recpipientsList.docs.map(r => r.data().email)
+    console.log("to: " + recpipients)
+    let config = {
+      from: "dsjj.app@gmail.com <" + data.email.from + ">",
+      to: recpipients,
+      subject: data.email.subject,
+      text: data.email.body
+    };
+
+
+    if (recpipients.length > 0) {
+      transporter.sendMail(config, (err, i) => {
+        if (err)
+          throw new functions.https.HttpsError(400)
+        else {
+          return "200"
+        }
+      })
+    }
+  })
+
+
+
+})
+
 exports.createUser = functions.https.onCall((data, context) => {
   if (["super-instructor", "admin"].indexOf(context.auth.token.role) != -1) {
     admin.auth().createUser({
