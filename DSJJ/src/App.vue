@@ -37,6 +37,7 @@
           this.setAuthorized(true)
           user.getIdTokenResult().then(a => {
             this.setRole(a.claims.role);
+            console.log(a.claims.role)
             this.initRanks()
           })
           return true

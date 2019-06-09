@@ -22,6 +22,7 @@
           </span>
         </a>
       </router-link>
+      
       <router-link tag="li" to="/dojos">
         <a>
           <span class="icon">
@@ -29,6 +30,15 @@
           </span>
         </a>
       </router-link>
+      <div v-if="isAdmin">
+      <router-link tag="li" to="/premissions">
+        <a>
+          <span class="icon">
+            <i class="fas fa-key"></i>
+          </span>
+        </a>
+      </router-link>
+      </div>
       <router-link tag="li" to="/" exact>
         <a>
           <span class="icon">
@@ -42,10 +52,14 @@
 </template>
 
 <script>
+  import { mapGetters } from 'vuex';
   export default {
     name: 'navbar',
     data() {
       return {}
+    },
+    computed: {
+      ...mapGetters(['isAdmin'])
     },
     methods: {}
   }

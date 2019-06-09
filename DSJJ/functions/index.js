@@ -35,6 +35,27 @@ const generatePassword = () => {
   return Math.random().toString(36).slice(-8);
 }
 
+exports.setRole = functions.https.onCall((data, context) => {
+  if (["admin"].indexOf(context.auth.token.role) != -1) {
+    return admin.auth().getUserByEmail(data.email).then((userRecord) => {
+      console.log(userRecord.toJSON())
+      admin.auth().setCustomUserClaims(userRecord.uid, {
+        role: data.role
+      }).then(()=> {ok: true}).catch((error) => {
+        if (error.code == "auth/user-not-found") {
+          throw new functions.https.HttpsError(400)
+
+        } else {
+          throw new functions.https.HttpsError(400)
+        }
+      });
+    })
+  } else {
+    throw new functions.https.HttpsError(401)
+  }
+
+});
+
 exports.sendEmail = functions.https.onCall((data, context) => {
   let recpipientsRef = admin.firestore().collection("participants");
   let recpipients = [];
@@ -76,15 +97,14 @@ exports.sendEmail = functions.https.onCall((data, context) => {
     };
 
 
-    if (recpipients.length > 0) {
-      transporter.sendMail(config, (err, i) => {
+   
+      return transporter.sendMail(config, (err, i) => {
         if (err)
           throw new functions.https.HttpsError(400)
         else {
-          return "200"
+          return {ok: true}
         }
       })
-    }
   })
 
 

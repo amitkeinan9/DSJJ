@@ -6,8 +6,9 @@ import ParticipantsPage from '@/pages/ParticipantsPage'
 import SettingsPage from '@/pages/SettingsPage'
 import MailingListPage from '@/pages/MailingListPage'
 import ParticipantPage from '@/pages/ParticipantPage'
-
+import PremissionsPage from '@/pages/PremissionsPage'
 import NoParticipantPage from '@/pages/NoParticipantPage'
+import ForbiddenPage from '@/pages/ForbiddenPage'
 
 
 Vue.use(Router)
@@ -38,15 +39,22 @@ export default new Router({
       path: '/dojos',
       name: 'SettingsPage',
       component: SettingsPage
-    }
-    ,
+    },{
+      path: '/forbidden',
+      name: 'ForbiddenPage',
+      component: ForbiddenPage
+    },
     {
       path: '/participants/:id',
       name: 'ParticipantPage',
       component: ParticipantPage,
       props: true
     },
-
+    {
+      path: '/premissions',
+      name: 'PremissionsPage',
+      component: PremissionsPage,
+    },
     {
       path: '/noparticipant',
       name: 'NoParticipantPage',

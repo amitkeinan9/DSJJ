@@ -26,9 +26,11 @@ export default new Vuex.Store({
     }
   },
   actions: {
-    authorizePage({}, redirect = true) {
+    authorizePage({state, getters}, {redirect = true, adminOnly = false}) {
       if (!sessionStorage.getItem("user") && redirect) 
         router.push("/")
+      if(adminOnly && !getters.isAdmin) 
+        router.push("/forbidden")
 
     },
     initStore({

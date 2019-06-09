@@ -137,7 +137,18 @@
           firebase.functions().httpsCallable('sendEmail')({
             filters: filters,
             email: this.email,
-          }).then(() => {
+          }).then((result) => {
+            console.log(result)
+            
+              Snackbar.show({
+                  text: 'ההודעה נשלחה בהצלחה',
+                  showAction: false,
+                  backgroundColor: '#2fa04d'
+                });
+
+            
+          }).catch(() => {
+            this.showError("קרתה תקלה, נסה שוב מאוחר יותר")
           })
 
         } else {
@@ -146,7 +157,7 @@
       }
     },
     created() {
-      this.authorizePage().then(() => {
+      this.authorizePage({}).then(() => {
         this.instructor = JSON.parse(sessionStorage.user);
         //this.data.instructor = this.instructor.id
         this.instructors = [this.instructor]

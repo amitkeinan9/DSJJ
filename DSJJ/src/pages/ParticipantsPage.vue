@@ -87,7 +87,7 @@
       }
     },
     created() {
-      this.authorizePage();
+      this.authorizePage({});
       this.db = firebase.firestore();
       this.db.collection("participants").onSnapshot((participantsDocs) => {
         this.participants = participantsDocs.docs.map(p => {

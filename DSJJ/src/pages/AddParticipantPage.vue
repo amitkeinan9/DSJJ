@@ -220,7 +220,7 @@
       }
     },
     created() {
-      this.authorizePage().then(() => {
+      this.authorizePage({}).then(() => {
         this.instructor = JSON.parse(sessionStorage.user);
         this.data.instructor = this.instructor.id
         this.instructors = [this.instructor]

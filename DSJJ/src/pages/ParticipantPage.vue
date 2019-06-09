@@ -282,7 +282,7 @@
       }
     },
     created() {
-      this.authorizePage(false);
+      this.authorizePage({redirect: false});
 
       this.participant = this.participantprop
 

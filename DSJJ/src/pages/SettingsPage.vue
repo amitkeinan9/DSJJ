@@ -122,7 +122,7 @@
       },
     },
     created() {
-      this.authorizePage();
+      this.authorizePage({});
       this.db = firebase.firestore();
       this.db.collection("dojos").onSnapshot((dojoDocs) => {
         this.db.collection("instructors").onSnapshot((instDocs) => {
