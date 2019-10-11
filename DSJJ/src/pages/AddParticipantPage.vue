@@ -190,15 +190,22 @@
                   backgroundColor: '#2fa04d'
                 });
                 
+
+
                 let rank = this.ranks.find((rank => rank.id == this.data.rank))
-                this.rankToCardIndex(rank.rank).then(index => {
+                let inst = this.instructors.find((i => i.id == this.data.instructor))
+                console.log(inst)
+                let dojo = inst.dojos.find(d => d.id == this.data.dojo)
+                if(rank > 0) {
                   firebase.functions().httpsCallable('createCard')({
                     id: participantRef.id,
                     name: name,
-                    index: index
+                    rank: rank.rank,
+                    dojo: dojo.name,
+                    instructor: inst.name
                   })
-                }) 
-                this.initFields()
+                }
+              this.initFields()
               }).catch((e) => {
                 console.log(e)
                 this.showError();

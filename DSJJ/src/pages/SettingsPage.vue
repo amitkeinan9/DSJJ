@@ -97,8 +97,9 @@
           if (snapshot.empty) {
             firebase.functions().httpsCallable('createUser')({
               fullName: data.firstName + " " + data.lastName,
-              email: doc.email,
+              email: doc.email.toLowerCase(),
             }).then((user) => {
+              data.email = data.email.toLowerCase()
               firebase.firestore().collection("instructors").add(data)
                 .then((docRef) => {
                   Snackbar.show({

@@ -24,7 +24,7 @@ const transporter = nodemailer.createTransport({
 
 var mailOptions = {
   from: 'dsjj.app@gmail.com',
-  to: 'amitkeinan9@gmail.com',
+  to: 'dsjj.app@gmail.com',
   subject: 'Card to print'
 };
 
@@ -41,7 +41,9 @@ exports.setRole = functions.https.onCall((data, context) => {
       console.log(userRecord.toJSON())
       admin.auth().setCustomUserClaims(userRecord.uid, {
         role: data.role
-      }).then(()=> {ok: true}).catch((error) => {
+      }).then(() => {
+        ok: true
+      }).catch((error) => {
         if (error.code == "auth/user-not-found") {
           throw new functions.https.HttpsError(400)
 
@@ -96,15 +98,18 @@ exports.sendEmail = functions.https.onCall((data, context) => {
       text: data.email.body
     };
 
+    console.log(config)
 
-   
-      return transporter.sendMail(config, (err, i) => {
-        if (err)
-          throw new functions.https.HttpsError(400)
-        else {
-          return {ok: true}
+    return transporter.sendMail(config, (err, i) => {
+      if (err) {
+        console.log(err)
+        throw new functions.https.HttpsError(400)
+      } else {
+        return {
+          ok: true
         }
-      })
+      }
+    })
   })
 
 
@@ -156,6 +161,8 @@ exports.createUser = functions.https.onCall((data, context) => {
 })
 
 exports.createCard = functions.https.onCall((data, context) => {
+  console.log(context.auth)
+
   if (!context.auth.uid)
     throw new functions.https.HttpsError(401)
   const destBucket = storage.bucket(bucketName)
@@ -163,65 +170,87 @@ exports.createCard = functions.https.onCall((data, context) => {
   // get the name of the participant
   const id = data.id;
   const name = data.name;
+  const rank = data.rank;
+  const dojo = data.dojo;
+  const inst = data.instructor;
+  const font_name = rank > 6 ? "white" : "black";
 
-  // create the QR code with the link
-  const QRpath = path.join(os.tmpdir(), 'qr.png')
-  qrcode = qr.image('https://dsjj-5820a.firebaseapp.com/#/participants/' + id, {
-    type: 'png',
-    size: 1,
-    margin: 1
-  })
-  qrcode.pipe(fs.createWriteStream(QRpath));
+  if(rank > 0) {
+    // create the QR code with the link
+    const QRpath = path.join(os.tmpdir(), 'qr.png')
+    qrcode = qr.image('https://dsjj-5820a.firebaseapp.com/#/participants/' + id, {
+      type: 'png',
+      size: 2,
+      margin: 1
+    })
+    qrcode.pipe(fs.createWriteStream(QRpath));
 
-  // Set assets
-  const cardBasePath = path.join(os.tmpdir(), 'card.jpg');
-  const profilePicPath = path.join(os.tmpdir(), 'profile.jpg');
-  const fontFntPath = path.join(os.tmpdir(), 'font', 'font.fnt');
-  const fontPngPath = path.join(os.tmpdir(), 'font', 'font.png');
-  const finalCardPath = path.join(os.tmpdir(), id + '_card.jpg')
-  const dir = path.join(os.tmpdir(), "font")
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir);
-  }
+    // Set assets
+    const cardBasePath = path.join(os.tmpdir(), 'card.jpg');
+    const profilePicPath = path.join(os.tmpdir(), 'profile.jpg');
+    const fontFntPath = path.join(os.tmpdir(), 'font', 'font.fnt');
+    const fontPngPath = path.join(os.tmpdir(), 'font', font_name + '.png');
+    const finalCardPath = path.join(os.tmpdir(), id + '_card.jpg')
+    const dir = path.join(os.tmpdir(), "font")
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir);
+    }
 
-  return Promise.all([destBucket.file(path.join('assets', 'card' + data.index + '.jpeg')).download({
-    destination: cardBasePath
-  }), destBucket.file(path.join('assets', 'font.fnt')).download({
-    destination: fontFntPath
-  }), destBucket.file(path.join('assets', 'font.png')).download({
-    destination: fontPngPath
-  }), destBucket.file(path.join("profile_pictures", id)).download({
-    destination: profilePicPath
-  })]).then(() => {
-    Jimp.read(cardBasePath, (err, card) => {
-      if (err) throw err;
-      Jimp.read(profilePicPath, (err, profile) => {
+    console.log(fs.readdirSync(path.join(os.tmpdir(), 'font')))
+
+    return Promise.all([destBucket.file(path.join('assets', rank + '.jpg')).download({
+      destination: cardBasePath
+    }), destBucket.file(path.join('assets', font_name + '.fnt')).download({
+      destination: fontFntPath
+    }), destBucket.file(path.join('assets', font_name + '.png')).download({
+      destination: fontPngPath
+    }), destBucket.file(path.join("profile_pictures", id)).download({
+      destination: profilePicPath
+    })]).then(() => {
+      console.log(fs.readdirSync(path.join(os.tmpdir(), 'font')))
+      Jimp.read(cardBasePath, (err, card) => {
         if (err) throw err;
-        profile.resize(60, Jimp.AUTO)
-        card.composite(profile, 10, 10)
-        Jimp.read(QRpath, (err, qrImage) => {
+        Jimp.read(profilePicPath, (err, profile) => {
           if (err) throw err;
-          card.composite(qrImage, 190, 10)
-          Jimp.loadFont(fontFntPath).then(font => {
-            card.print(font, 80, 100, {
-              text: name.split("").reverse().join(),
-              alignmentX: Jimp.HORIZONTAL_ALIGN_RIGHT
-            }, 90);
-            card.write(finalCardPath)
-            mailOptions.attachments = [{
-              filename: id + ".png",
-              path: finalCardPath
-            }]
-            transporter.sendMail(mailOptions, function (error, info) {
-              if (error) {
-                return "Fail"
-              } else {
-                return "Success"
-              }
-            });
-          }).catch(() => "Fail")
+          profile.resize(120, Jimp.AUTO)
+          card.composite(profile, 310, 140)
+          Jimp.read(QRpath, (err, qrImage) => {
+            if (err) throw err;
+            card.composite(qrImage, 30, 210)
+            console.log("here")
+            console.log(fontFntPath)
+            Jimp.loadFont(fontFntPath).then(font => {
+              console.log("inside")
+              card.print(font, 160, 170, {
+                text: name.split("").reverse().join(""),
+                alignmentX: Jimp.HORIZONTAL_ALIGN_RIGHT
+              }, 120);
+              card.print(font, 160, 225, {
+                text: (dojo + "/ ").split("").reverse().join(""),
+                alignmentX: Jimp.HORIZONTAL_ALIGN_RIGHT
+              }, 120);
+              card.print(font, 160, 250, {
+                text: inst.split("").reverse().join(""),
+                alignmentX: Jimp.HORIZONTAL_ALIGN_RIGHT
+              }, 120);
+              card.write(finalCardPath)
+              mailOptions.attachments = [{
+                filename: id + ".png",
+                path: finalCardPath
+              }]
+              mailOptions.cc = context.auth.token.email;
+              transporter.sendMail(mailOptions, function (error, info) {
+                if (error) {
+                  console.log("err in mail " + error)
+                  return "Fail"
+                } else {
+                  return "Success"
+                }
+              });
+            }).catch((err) => console.log(err))
+          })
         })
-      })
-    });
-  })
+      });
+    })
+  }
 });

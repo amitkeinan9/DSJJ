@@ -71,7 +71,7 @@
           <hr>
           
           <timeline :events="participant.history"></timeline>
-          <div v-if="!isViewer">
+          <div v-if="!isViewer && participant.rank.rank > 0">
             <hr>
             <button class="is-outlined is-warning button is-fullwidth" @click="createCard">
               הנפק תעודה חדשה
@@ -227,13 +227,15 @@
         }
       },
       createCard() {
-        this.rankToCardIndex(this.participant.rank.rank).then(index => {
+        
           firebase.functions().httpsCallable('createCard')({
                   id: this.id,
                   name: this.participant.name,
-                  index: index
+                  rank: this.participant.rank.rank,
+                  dojo: this.participant.dojo.name,
+                  instructor: this.participant.instructor.firstName + " " + this.participant.instructor.lastName
                 })
-        }) 
+        
         Snackbar.show({
             text: 'הכרטיס החדש נשלח להדפסה',
             showAction: false,
@@ -268,8 +270,15 @@
             showAction: false,
             backgroundColor: '#2fa04d'
           })
+
+          
+
           this.type = ""
           this.editing = false
+
+
+          if(this.participant.rank.rank > 0)
+            this.createCard();
         }).catch((error) => {
           this.type = ""
           this.editing = false

@@ -49,8 +49,9 @@
         user
       }) {
         const db = firebase.firestore()
+        console.log(user.email)
         db.collection('instructors').where('email', '==', user.email).get().then((results) => {
-
+          console.log(results.docs[0])
           const inst = results.docs[0].data();
 
           let userObj = {
