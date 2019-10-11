@@ -89,11 +89,12 @@ exports.sendEmail = functions.https.onCall((data, context) => {
   }
   recpipientsRef.get().then(recpipientsList => {
     // console.log(recpipientsList.docs[0].data())
-    recpipients = recpipientsList.docs.map(r => r.data().email)
+    recpipients = [...new Set(recpipientsList.docs.map(r => r.data().email))]
     console.log("to: " + recpipients)
     let config = {
       from: "dsjj.app@gmail.com <" + data.email.from + ">",
-      to: recpipients,
+      to: "dsjj.app@gmail.com",
+      bcc: recpipients,
       subject: data.email.subject,
       text: data.email.body
     };
