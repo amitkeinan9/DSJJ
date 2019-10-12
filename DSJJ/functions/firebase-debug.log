@@ -1,0 +1,32 @@
+[debug] [2019-10-12T10:49:28.764Z] ----------------------------------------------------------------------
+[debug] [2019-10-12T10:49:28.767Z] Command:       /Users/amitkeinan/.nvm/versions/node/v8.9.0/bin/node /usr/local/bin/firebase emulators:start --only functions
+[debug] [2019-10-12T10:49:28.767Z] CLI Version:   7.5.0
+[debug] [2019-10-12T10:49:28.767Z] Platform:      darwin
+[debug] [2019-10-12T10:49:28.767Z] Node Version:  v8.9.0
+[debug] [2019-10-12T10:49:28.768Z] Time:          Sat Oct 12 2019 13:49:28 GMT+0300 (IDT)
+[debug] [2019-10-12T10:49:28.768Z] ----------------------------------------------------------------------
+[debug] 
+[info] i  Starting emulators: ["functions"]
+[warn] ⚠  Your requested "node" version "10" doesn't match your global version "8"
+[info] ✔  functions: Emulator started at http://localhost:5001
+[info] i  functions: Watching "/Users/amitkeinan/Desktop/DSJJ/DSJJ/DSJJ/functions" for Cloud Functions...
+[debug] [2019-10-12T10:49:29.363Z] [runtime-status] Functions runtime initialized. {"cwd":"/Users/amitkeinan/Desktop/DSJJ/DSJJ/DSJJ/functions","node_version":"8.9.0"}
+[debug] [2019-10-12T10:49:29.363Z] [runtime-status] Disabled runtime features: undefined {}
+[warn] ⚠  The Cloud Functions emulator requires the module "firebase-admin" to be installed. This package is in your package.json, but it's not available. You probably need to run "npm install" in your functions directory.
+[info] i  functions: Your functions could not be parsed due to an issue with your node_modules (see above)
+[debug] [2019-10-12T10:51:17.121Z] ----------------------------------------------------------------------
+[debug] [2019-10-12T10:51:17.124Z] Command:       /Users/amitkeinan/.nvm/versions/node/v8.9.0/bin/node /usr/local/bin/firebase emulators:start --only functions
+[debug] [2019-10-12T10:51:17.124Z] CLI Version:   7.5.0
+[debug] [2019-10-12T10:51:17.124Z] Platform:      darwin
+[debug] [2019-10-12T10:51:17.124Z] Node Version:  v8.9.0
+[debug] [2019-10-12T10:51:17.125Z] Time:          Sat Oct 12 2019 13:51:17 GMT+0300 (IDT)
+[debug] [2019-10-12T10:51:17.125Z] ----------------------------------------------------------------------
+[debug] 
+[info] i  Starting emulators: ["functions"]
+[warn] ⚠  Your requested "node" version "10" doesn't match your global version "8"
+[info] ✔  functions: Emulator started at http://localhost:5001
+[info] i  functions: Watching "/Users/amitkeinan/Desktop/DSJJ/DSJJ/DSJJ/functions" for Cloud Functions...
+[debug] [2019-10-12T10:51:17.730Z] [runtime-status] Functions runtime initialized. {"cwd":"/Users/amitkeinan/Desktop/DSJJ/DSJJ/DSJJ/functions","node_version":"8.9.0"}
+[debug] [2019-10-12T10:51:17.731Z] [runtime-status] Disabled runtime features: undefined {}
+[warn] ⚠  The Cloud Functions emulator requires the module "firebase-admin" to be installed. This package is in your package.json, but it's not available. You probably need to run "npm install" in your functions directory.
+[info] i  functions: Your functions could not be parsed due to an issue with your node_modules (see above)

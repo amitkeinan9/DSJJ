@@ -51,7 +51,17 @@
           inst.id = i.id;
           return inst;
         })
-        this.loading = true;
+        const getRoles = firebase.functions().httpsCallable('getRoles');
+        getRoles({emails: this.instructors.map(i => i.email)}).then((roles) => {
+          
+          this.instructors.forEach(i => {            
+            i.role = roles.data.find(r => r.email == i.email).role;
+          });
+          this.instructors = this.instructors.filter(i => i.role != "admin")
+          this.loading = true;
+        });
+        
+        
       });
     },
   }

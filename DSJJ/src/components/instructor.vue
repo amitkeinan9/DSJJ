@@ -9,8 +9,8 @@
       <div class="level-item has-text-centered">
         <div>
           <div class="buttons has-addons" dir="ltr">
-            <span class="button" @click="setRole('super-instructor')">מדריך על</span>
-            <span class="button" @click="setRole('instructor')">מדריך</span>
+            <span :class="{'is-selected is-info ' : isSuperInstructor }" class="button" @click="setRole('super-instructor')">מדריך על</span>
+            <span :class="{'is-selected is-info ' : isInstructor }" class="button" @click="setRole('instructor')">מדריך</span>
           </div>
         </div>
       </div>
@@ -29,10 +29,14 @@
       return {
         instructorModal: false,
         selectModal: false,
+        isInstructor: false, 
+        isSuperInstructor: false
 
       }
     },
-    computed: {},
+    computed: {
+
+    },
     methods: {
       ...mapActions(['showError']),
       setRole(role) {
@@ -40,7 +44,8 @@
           role: role,
           email: this.instructor.email,
         }).then((result) => {
-          
+          this.isSuperInstructor = role == "super-instructor"
+            this.isInstructor = role == "instructor"
             Snackbar.show({
               text: 'התפקיד עודכן בהצלחה',
               showAction: false,
@@ -49,6 +54,10 @@
           
         }).catch(() => this.showError("קרתה תקלה, נסה שוב מאוחר יותר"))
       }
+    },
+    mounted() {
+      this.isSuperInstructor = this.instructor.role == "super-instructor"
+      this.isInstructor = this.instructor.role == "instructor"
     }
   }
 

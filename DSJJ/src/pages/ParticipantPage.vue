@@ -335,7 +335,7 @@
                 name: dojo.name + " - " + i.firstName + " " + i.lastName,
                 id: dojo.id + " " + i.id
               }
-            });;
+            });
           }));
           this.loading = true;
         });

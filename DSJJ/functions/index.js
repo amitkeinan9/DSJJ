@@ -35,6 +35,21 @@ const generatePassword = () => {
   return Math.random().toString(36).slice(-8);
 }
 
+exports.getRoles = functions.https.onCall((data, context) => {
+  if (["admin"].indexOf(context.auth.token.role) != -1) {
+    // return new Promise((resolve, reject) => {
+      return Promise.all(data.emails.map(email => {
+        return admin.auth().getUserByEmail(email).then((userRecord) => {
+          return {role: userRecord.customClaims.role, email: email};
+        })
+      }))
+      // resolve(roles)
+    // })
+    
+    
+  }
+});
+
 exports.setRole = functions.https.onCall((data, context) => {
   if (["admin"].indexOf(context.auth.token.role) != -1) {
     return admin.auth().getUserByEmail(data.email).then((userRecord) => {
