@@ -237,18 +237,18 @@ exports.createCard = functions.https.onCall((data, context) => {
             console.log(fontFntPath)
             Jimp.loadFont(fontFntPath).then(font => {
               console.log("inside")
-              card.print(font, 160, 170, {
-                text: name.split("").reverse().join(""),
+              card.print(font, 120, 170, {
+                text: ("שם: " + name).split("").reverse().join(""),
                 alignmentX: Jimp.HORIZONTAL_ALIGN_RIGHT
-              }, 120);
-              card.print(font, 160, 225, {
-                text: (dojo + "/ ").split("").reverse().join(""),
+              }, 180);
+              card.print(font, 120, 225, {
+                text: ("מועדון: " + dojo ).split("").reverse().join(""),
                 alignmentX: Jimp.HORIZONTAL_ALIGN_RIGHT
-              }, 120);
-              card.print(font, 160, 250, {
-                text: inst.split("").reverse().join(""),
+              }, 180);
+              card.print(font, 120, 250, {
+                text: ("מאמן: " + inst).split("").reverse().join(""),
                 alignmentX: Jimp.HORIZONTAL_ALIGN_RIGHT
-              }, 120);
+              }, 180);
               card.write(finalCardPath)
               mailOptions.attachments = [{
                 filename: id + ".png",
