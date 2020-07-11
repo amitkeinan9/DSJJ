@@ -36,7 +36,7 @@
     },
     methods: {
       codeArrived(c) {
-        const startWith = "https://dsjj-5820a.firebaseapp.com/#"
+        const startWith = "https://dsjj.org/#"
         if (c.startsWith(startWith)) {
           router.push(c.substring(startWith.length))
         } else {

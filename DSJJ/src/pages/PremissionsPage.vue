@@ -46,18 +46,19 @@
       });
       this.db = firebase.firestore();
       this.db.collection("instructors").onSnapshot((instDocs) => {
-        this.instructors = instDocs.docs.map(i => {
+        let insts = instDocs.docs.map(i => {
           let inst = i.data();
           inst.id = i.id;
           return inst;
         })
         const getRoles = firebase.functions().httpsCallable('getRoles');
-        getRoles({emails: this.instructors.map(i => i.email)}).then((roles) => {
-          
-          this.instructors.forEach(i => {            
+        getRoles({emails: insts.map(i => i.email)}).then((roles) => {
+          console.log(roles.data)
+          insts.forEach(i => {            
             i.role = roles.data.find(r => r.email == i.email).role;
           });
-          this.instructors = this.instructors.filter(i => i.role != "admin")
+          insts = insts.filter(i => i.role != "admin")
+          this.instructors = insts;
           this.loading = true;
         });
         

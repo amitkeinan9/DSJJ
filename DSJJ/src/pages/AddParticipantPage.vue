@@ -133,9 +133,9 @@
               });
           }, {
             maxWidth: 100,
-            orientation: true,
+            orientation: 1,
             noRevoke: true,
-            canvas: true,
+            
           } // Options
         );
       },
@@ -174,7 +174,7 @@
           firebase.firestore().collection("participants").add(this.data).then(participantRef => {
             const fileName = participantRef.id
             const name = this.data.firstName + " " + this.data.lastName
-            firebase.storage().ref().child("profile_pictures/" + fileName).put(this.file).then((
+            firebase.storage().ref().child("profile_pictures/" + fileName).put(this.file, {"autoOrient": true}).then((
               snapshot) => {
               snapshot.ref.getDownloadURL().then((link) => {
                 participantRef.set({
@@ -194,18 +194,19 @@
 
                 let rank = this.ranks.find((rank => rank.id == this.data.rank))
                 let inst = this.instructors.find((i => i.id == this.data.instructor))
-                console.log(inst)
+                console.log(rank.rank)
                 let dojo = inst.dojos.find(d => d.id == this.data.dojo)
-                if(rank > 0) {
+      
+                if(rank.rank > 0) {
                   firebase.functions().httpsCallable('createCard')({
                     id: participantRef.id,
                     name: name,
-                    rank: rank.rank,
+                    rank: rank,
                     dojo: dojo.name,
                     instructor: inst.name
                   })
                 }
-              this.initFields()
+                this.initFields()
               }).catch((e) => {
                 console.log(e)
                 this.showError();

@@ -28,25 +28,38 @@ var mailOptions = {
   subject: 'Card to print'
 };
 
-admin.initializeApp()
+admin.initializeApp({
+  credential: admin.credential.cert(require('./admin.json')),
+  databaseURL: "https://dsjj-5820a.firebaseio.com"
+})
 
 
 const generatePassword = () => {
   return Math.random().toString(36).slice(-8);
 }
 
+const rankText = (rank) => {
+  const nameParts = rank.name.split(" ")
+  if (nameParts.length < 2)
+    return rank.name;
+
+  const name = nameParts[0] + " " + nameParts[1].split("").reverse().join("")
+ 
+  if (rank.rank < 12)
+    return name;
+  if (rank.rank < 15)
+    return name  + " מאסטר ";
+  return name  + " גראנד מאסטר ";
+} 
+
 exports.getRoles = functions.https.onCall((data, context) => {
   if (["admin"].indexOf(context.auth.token.role) != -1) {
-    // return new Promise((resolve, reject) => {
       return Promise.all(data.emails.map(email => {
         return admin.auth().getUserByEmail(email).then((userRecord) => {
+          
           return {role: userRecord.customClaims.role, email: email};
         })
       }))
-      // resolve(roles)
-    // })
-    
-    
   }
 });
 
@@ -102,13 +115,14 @@ exports.sendEmail = functions.https.onCall((data, context) => {
     console.log("Filtering by maxAge")
     recpipientsRef = recpipientsRef.where("birthdate", '>=', filters.maxAge)
   }
+  
   recpipientsRef.get().then(recpipientsList => {
     // console.log(recpipientsList.docs[0].data())
     recpipients = [...new Set(recpipientsList.docs.map(r => r.data().email))]
     console.log("to: " + recpipients)
     let config = {
       from: "dsjj.app@gmail.com <" + data.email.from + ">",
-      to: "dsjj.app@gmail.com",
+      to: context.auth.token.email,
       bcc: recpipients,
       subject: data.email.subject,
       text: data.email.body
@@ -126,6 +140,9 @@ exports.sendEmail = functions.https.onCall((data, context) => {
         }
       }
     })
+  }).catch((e) => {
+    console.error("ERROR")
+    console.log(e)
   })
 
 
@@ -177,24 +194,21 @@ exports.createUser = functions.https.onCall((data, context) => {
 })
 
 exports.createCard = functions.https.onCall((data, context) => {
-  console.log(context.auth)
-
   if (!context.auth.uid)
     throw new functions.https.HttpsError(401)
   const destBucket = storage.bucket(bucketName)
-  console.log(destBucket.name)
+
   // get the name of the participant
   const id = data.id;
   const name = data.name;
-  const rank = data.rank;
+  const rank = data.rank.rank;
   const dojo = data.dojo;
   const inst = data.instructor;
-  const font_name = rank > 6 ? "white" : "black";
 
   if(rank > 0) {
     // create the QR code with the link
     const QRpath = path.join(os.tmpdir(), 'qr.png')
-    qrcode = qr.image('https://dsjj-5820a.firebaseapp.com/#/participants/' + id, {
+    qrcode = qr.image('https://dsjj.org/#/participants/' + id, {
       type: 'png',
       size: 2,
       margin: 1
@@ -202,71 +216,139 @@ exports.createCard = functions.https.onCall((data, context) => {
     qrcode.pipe(fs.createWriteStream(QRpath));
 
     // Set assets
-    const cardBasePath = path.join(os.tmpdir(), 'card.jpg');
+    const beltPath = path.join(os.tmpdir(), 'belt.jpg');
+    const backBasePath = path.join(os.tmpdir(), 'back.jpg');
+    const logoPath = path.join(os.tmpdir(), 'logo.jpg');
     const profilePicPath = path.join(os.tmpdir(), 'profile.jpg');
-    const fontFntPath = path.join(os.tmpdir(), 'font', 'font.fnt');
-    const fontPngPath = path.join(os.tmpdir(), 'font', font_name + '.png');
-    const finalCardPath = path.join(os.tmpdir(), id + '_card.jpg')
-    const dir = path.join(os.tmpdir(), "font")
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir);
+    const nameFontFntPath = path.join(os.tmpdir(), 'name', 'font.fnt');
+    const nameFontPngPath = path.join(os.tmpdir(), 'name', 'font.png');
+    const boldFontFntPath = path.join(os.tmpdir(), 'bold', 'font.fnt');
+    const boldFontPngPath = path.join(os.tmpdir(), 'bold', 'font.png');
+    const regFontFntPath = path.join(os.tmpdir(), 'reg', 'font.fnt');
+    const regFontPngPath = path.join(os.tmpdir(), 'reg', 'font.png');
+    const finalCardPath = path.join(os.tmpdir(), id + '_front_card.jpg');
+    const finalBackCardPath = path.join(os.tmpdir(), id + '_back_card.jpg');
+    
+    if (!fs.existsSync(path.join(os.tmpdir(), "name"))) {
+      fs.mkdirSync(path.join(os.tmpdir(), "name"));
+    }
+    if (!fs.existsSync(path.join(os.tmpdir(), "bold"))) {
+      fs.mkdirSync(path.join(os.tmpdir(), "bold"));
+    }
+    if (!fs.existsSync(path.join(os.tmpdir(), "reg"))) {
+      fs.mkdirSync(path.join(os.tmpdir(), "reg"));
     }
 
-    console.log(fs.readdirSync(path.join(os.tmpdir(), 'font')))
+    return Promise.all([
+      destBucket.file(path.join('assets_new', "belts-" + rank.toString().padStart(2, '0') + '.png')).download({
+        destination: beltPath
+      }), 
+      destBucket.file(path.join('assets_new', 'logo.png')).download({
+        destination: logoPath
+      }),
+       destBucket.file(path.join('assets_new', 'back.jpeg')).download({
+        destination: backBasePath
+      }),
+      destBucket.file(path.join('assets_new/bold/font.fnt')).download({
+        destination: boldFontFntPath
+      }), 
+      destBucket.file(path.join('assets_new/bold/font.png')).download({
+        destination: boldFontPngPath
+      }), 
+      destBucket.file(path.join('assets_new/reg/font.fnt')).download({
+        destination: regFontFntPath
+      }), 
+      destBucket.file(path.join('assets_new/reg/font.png')).download({
+        destination: regFontPngPath
+      }), 
+      destBucket.file(path.join('assets_new/name/font.fnt')).download({
+        destination: nameFontFntPath
+      }), 
+      destBucket.file(path.join('assets_new/name/font.png')).download({
+        destination: nameFontPngPath
+      }), 
+      destBucket.file(path.join("profile_pictures", id)).download({
+        destination: profilePicPath
+      })
+    ]).then(async () => {
+      const [front, profile, belt, logo, nameFont, boldFont, regFont, back, qrImage] = await Promise.all([new Jimp(1009, 639, '#FFFFFF'),
+                    Jimp.read(profilePicPath),
+                    Jimp.read(beltPath),
+                    Jimp.read(logoPath),
+                    Jimp.loadFont(nameFontFntPath),
+                    Jimp.loadFont(boldFontFntPath),
+                    Jimp.loadFont(regFontFntPath),
+                    Jimp.read(backBasePath),
+                    Jimp.read(QRpath),
+                  ]);
+      
+      profile.resize(Jimp.AUTO, 539).quality(100);
 
-    return Promise.all([destBucket.file(path.join('assets', rank + '.jpg')).download({
-      destination: cardBasePath
-    }), destBucket.file(path.join('assets', font_name + '.fnt')).download({
-      destination: fontFntPath
-    }), destBucket.file(path.join('assets', font_name + '.png')).download({
-      destination: fontPngPath
-    }), destBucket.file(path.join("profile_pictures", id)).download({
-      destination: profilePicPath
-    })]).then(() => {
-      console.log(fs.readdirSync(path.join(os.tmpdir(), 'font')))
-      Jimp.read(cardBasePath, (err, card) => {
-        if (err) throw err;
-        Jimp.read(profilePicPath, (err, profile) => {
-          if (err) throw err;
-          profile.resize(120, Jimp.AUTO)
-          card.composite(profile, 310, 140)
-          Jimp.read(QRpath, (err, qrImage) => {
-            if (err) throw err;
-            card.composite(qrImage, 30, 210)
-            console.log("here")
-            console.log(fontFntPath)
-            Jimp.loadFont(fontFntPath).then(font => {
-              console.log("inside")
-              card.print(font, 120, 170, {
-                text: ("שם: " + name).split("").reverse().join(""),
-                alignmentX: Jimp.HORIZONTAL_ALIGN_RIGHT
-              }, 180);
-              card.print(font, 120, 225, {
-                text: ("מועדון: " + dojo ).split("").reverse().join(""),
-                alignmentX: Jimp.HORIZONTAL_ALIGN_RIGHT
-              }, 180);
-              card.print(font, 120, 250, {
-                text: ("מאמן: " + inst).split("").reverse().join(""),
-                alignmentX: Jimp.HORIZONTAL_ALIGN_RIGHT
-              }, 180);
-              card.write(finalCardPath)
-              mailOptions.attachments = [{
-                filename: id + ".png",
-                path: finalCardPath
-              }]
-              mailOptions.cc = context.auth.token.email;
-              transporter.sendMail(mailOptions, function (error, info) {
-                if (error) {
-                  console.log("err in mail " + error)
-                  return "Fail"
-                } else {
-                  return "Success"
-                }
-              });
-            }).catch((err) => console.log(err))
-          })
-        })
-      });
-    })
+      front.composite(profile, 500 - profile.bitmap.width, 50);
+      
+      belt.resize(Jimp.AUTO, 539).quality(100);
+      front.composite(belt, 500, 50);
+      
+      logo.resize(190, Jimp.AUTO).quality(100);
+      front.composite(logo, 425, -40);
+
+      front.print(nameFont, 550, 100, {
+        text: (name).split("").reverse().join(""),
+        alignmentX: Jimp.HORIZONTAL_ALIGN_RIGHT
+      }, 400);
+
+      front.print(boldFont, 700, 350, {
+        text: ("מועדון: ").split("").reverse().join(""),
+        alignmentX: Jimp.HORIZONTAL_ALIGN_RIGHT
+      }, 250);
+      front.print(boldFont, 700, 400, {
+        text: ("מאמן: ").split("").reverse().join(""),
+        alignmentX: Jimp.HORIZONTAL_ALIGN_RIGHT
+      }, 250);
+      front.print(boldFont, 700, 450, {
+        text: ("דרגה: ").split("").reverse().join(""),
+        alignmentX: Jimp.HORIZONTAL_ALIGN_RIGHT
+      }, 250);
+
+      front.print(regFont, 600, 350, {
+        text: (dojo).split("").reverse().join(""),
+        alignmentX: Jimp.HORIZONTAL_ALIGN_RIGHT
+      }, 250);
+      front.print(regFont, 618, 400, {
+        text: (inst).split("").reverse().join(""),
+        alignmentX: Jimp.HORIZONTAL_ALIGN_RIGHT
+      }, 250);
+      front.print(regFont, 621, 450, {
+        text: (rankText(data.rank)).split("").reverse().join(""),
+        alignmentX: Jimp.HORIZONTAL_ALIGN_RIGHT
+      }, 250);
+
+     
+
+      front.write(finalCardPath);
+      qrImage.resize(151, 151);
+      back.composite(qrImage, 55, 461);
+      back.write(finalBackCardPath)
+
+      mailOptions.subject = "הנפק כרטיס חניך " + name
+      mailOptions.attachments = [{
+        filename: id + "Front.png",
+        path: finalCardPath
+      },
+      {
+        filename: id + "Back.png",
+        path: finalBackCardPath
+      }]
+      console.log("done all promise")
+      mailOptions.cc = context.auth ? context.auth.token.email : "amitkeinan9@gmail.com";
+      
+      try {
+        await transporter.sendMail(mailOptions);
+        console.log("email sent");
+      } catch (error) {
+        console.log(error);
+      }
+      
+    }).catch((e) => console.error(e))
   }
 });

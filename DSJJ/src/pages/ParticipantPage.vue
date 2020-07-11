@@ -165,6 +165,7 @@
             backgroundColor: '#2fa04d'
           })
           this.type = ""
+          this.note = ""
           this.editing = false
         }).catch(() => {
           this.type = ""
@@ -227,11 +228,11 @@
         }
       },
       createCard() {
-        
+          console.log(this.participant.rank.name)
           firebase.functions().httpsCallable('createCard')({
                   id: this.id,
                   name: this.participant.name,
-                  rank: this.participant.rank.rank,
+                  rank: this.participant.rank,
                   dojo: this.participant.dojo.name,
                   instructor: this.participant.instructor.firstName + " " + this.participant.instructor.lastName
                 })
@@ -247,7 +248,7 @@
           startDate: moment(data.date).toDate().getTime(),
           to: data.selected.name,
           type: this.type,
-          uploadDate: moment().format('YYYY-MM-DD')
+          uploadDate: (new Date()).getTime()
         }
 
         let update = {}
@@ -276,7 +277,7 @@
           this.type = ""
           this.editing = false
 
-
+          console.log(this.participant.rank)
           if(this.participant.rank.rank > 0)
             this.createCard();
         }).catch((error) => {
