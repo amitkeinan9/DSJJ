@@ -14,7 +14,7 @@
   "dependencies": {
     "firebase": "^5.9.0",
     "lodash": "^4.17.11",
-    "moment": "^2.24.0",
+    "moment": "^2.29.4",
     "sass-loader": "^7.1.0",
     "vue": "^2.5.2",
     "vue-qr-reader": "^1.6.2",
